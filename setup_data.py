@@ -26,8 +26,8 @@ def seed_data():
             'password': 'password123'
         },
         {
-            'username': 'dev',
-            'email': 'dev@gmail.com',
+            'username': 'employee2',
+            'email': 'employee2@gmail.com',
             'full_name': 'Ella Abainza',
             'role': 'employee',
             'department': 'Human Resources',

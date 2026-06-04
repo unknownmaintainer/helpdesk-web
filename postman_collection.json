@@ -28,7 +28,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"employee@gmail.com\",\n  \"password\": \"password123\"\n}",
+              "raw": "{\n  \"username\": \"employee@gmail.com\",\n  \"password\": \"password123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -70,7 +70,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"admin123\"\n}",
+              "raw": "{\n  \"username\": \"admin@gmail.com\",\n  \"password\": \"admin123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

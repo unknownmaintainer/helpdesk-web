@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
         # 2. Create default users
         # Employee
-        bob = CustomUser.objects.create_user(
+        mardion = CustomUser.objects.create_user(
             username='employee',
             email='employee@gmail.com',
             password='password123',
@@ -24,7 +24,7 @@ class Command(BaseCommand):
         )
         
         # Manager / Admin
-        alice = CustomUser.objects.create_superuser(
+        rostom = CustomUser.objects.create_superuser(
             username='admin',
             email='admin@gmail.com',
             password='admin123',
@@ -33,10 +33,10 @@ class Command(BaseCommand):
             department='IT Specialist'
         )
         
-        # Developer
-        charlie = CustomUser.objects.create_user(
-            username='dev',
-            email='dev@gmail.com',
+        # Employee
+        ella = CustomUser.objects.create_user(
+            username='employee2',
+            email='employee2@gmail.com',
             password='password123',
             role='employee',
             full_name='Ella Abainza',
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             category="Hardware",
             priority="Medium",
             status="Open",
-            created_by=bob
+            created_by=mardion
         )
         
         t2 = Ticket.objects.create(
@@ -61,7 +61,7 @@ class Command(BaseCommand):
             category="Software",
             priority="Low",
             status="Investigating",
-            created_by=bob
+            created_by=mardion
         )
 
         t3 = Ticket.objects.create(
@@ -70,7 +70,7 @@ class Command(BaseCommand):
             category="Network",
             priority="High",
             status="Resolved",
-            created_by=charlie
+            created_by=ella
         )
 
         t4 = Ticket.objects.create(
@@ -79,7 +79,7 @@ class Command(BaseCommand):
             category="Account",
             priority="Medium",
             status="Closed",
-            created_by=charlie
+            created_by=ella
         )
 
         self.stdout.write(self.style.SUCCESS("Support tickets seeded."))
@@ -88,22 +88,22 @@ class Command(BaseCommand):
         TicketUpdate.objects.create(
             ticket=t2,
             comment="Checking your mailbox quota and connectivity settings.",
-            updated_by=alice
+            updated_by=rostom
         )
         TicketUpdate.objects.create(
             ticket=t3,
             comment="Identified a router route mismatch on remote servers. VPN tunnel settings have been refreshed.",
-            updated_by=alice
+            updated_by=rostom
         )
         TicketUpdate.objects.create(
             ticket=t3,
             comment="Issue has been successfully resolved. Checked connection stability and VPN client is stable.",
-            updated_by=alice
+            updated_by=rostom
         )
         TicketUpdate.objects.create(
             ticket=t4,
             comment="Temporary password sent via secure SMS. User confirmed login and reset password. Closing ticket.",
-            updated_by=alice
+            updated_by=rostom
         )
 
         self.stdout.write(self.style.SUCCESS("Seeding activity completed successfully!"))
