@@ -25,8 +25,6 @@ urlpatterns = [
     path('users/', views.users_view, name='users'),
     path('security-logs/', views.security_logs_view, name='security_logs'),
     path('solutions/<slug:slug>/', views.solutions_detail_view, name='solutions_detail'),
-    path('integrations/', views.integrations_view, name='integrations'),
-    path('integrations/simulate/', views.simulate_alert_view, name='simulate_alert'),
     path('forgot-password/', views.forgot_password_view, name='forgot_password'),
 
     # JWT API endpoints

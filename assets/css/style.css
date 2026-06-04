@@ -3344,3 +3344,49 @@ body.dark-mode .border-bottom,
 body.dark-mode .border {
     border-color: #334155 !important;
 }
+
+/* ─── User Card styling for User Management page ─────────────────────────────── */
+.user-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background-color: white;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+    height: 100%;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+.user-card:hover {
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.07);
+    transform: translateY(-1px);
+}
+body.dark-mode .user-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+}
+body.dark-mode .user-card .text-muted,
+body.dark-mode .user-card .text-secondary {
+    color: #94a3b8 !important;
+}
+
+/* ─── Button Outline Overrides for Dark Mode ─────────────────────────────────── */
+body.dark-mode .btn-outline-secondary {
+    color: #cbd5e1 !important;
+    border-color: #475569 !important;
+    background-color: transparent !important;
+}
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #334155 !important;
+    color: #f8fafc !important;
+}
+body.dark-mode .btn-outline-success {
+    color: #4ade80 !important;
+    border-color: rgba(74, 222, 128, 0.4) !important;
+    background-color: transparent !important;
+}
+body.dark-mode .btn-outline-success:hover {
+    background-color: rgba(74, 222, 128, 0.2) !important;
+    color: #ffffff !important;
+}
+

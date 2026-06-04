@@ -73,13 +73,13 @@
     </div>
 
     <!-- IT Managers Section -->
-    <p class="role-section-label fw-bold text-uppercase text-navy" style="font-size: 0.75rem; letter-spacing: 1px; color: #0A3D91; margin: 2rem 0 1rem;"><i class="fa-solid fa-user-shield me-1"></i> IT Managers</p>
+    <p class="role-section-label fw-bold text-uppercase text-navy" style="font-size: 0.75rem; letter-spacing: 1px; margin: 2rem 0 1rem;"><i class="fa-solid fa-user-shield me-1"></i> IT Managers</p>
     <div class="d-grid gap-3 mb-4 user-section" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
         {% for u in managers %}
             <div class="user-item" data-name="{{ u.full_name|default:u.username }}" data-email="{{ u.email }}">
-                <div class="user-card text-center" style="border: 1px solid #e2e8f0; border-radius: 12px; background-color: white; padding: 1.5rem; transition: all 0.2s ease; height: 100%; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div class="user-card text-center">
                     <img src="{% if u.profile_picture %}{{ u.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={{ u.full_name|urlencode }}&background=0A3D91&color=fff{% endif %}" alt="{{ u.full_name }}" style="width: 72px; height: 72px; border-radius: 50%; border: 3px solid #f8fafc; margin-bottom: 0.75rem; object-fit: cover;">
-                    <h6 class="fw-bold mb-0 text-navy" style="color: #0A3D91;">{{ u.full_name|default:u.username }}</h6>
+                    <h6 class="fw-bold mb-0 text-navy">{{ u.full_name|default:u.username }}</h6>
                     <p class="text-muted small mb-1">{{ u.email }}</p>
                     <p class="text-secondary small mb-2"><i class="fa-solid fa-briefcase me-1"></i>{{ u.department }}</p>
                     <span class="badge rounded-pill px-3 mb-3 bg-primary text-white" style="font-size:0.7rem;">
@@ -112,13 +112,13 @@
     </div>
 
     <!-- Employees Section -->
-    <p class="role-section-label fw-bold text-uppercase text-navy" style="font-size: 0.75rem; letter-spacing: 1px; color: #0A3D91; margin: 2rem 0 1rem;"><i class="fa-solid fa-users me-1"></i> Employees</p>
+    <p class="role-section-label fw-bold text-uppercase text-navy" style="font-size: 0.75rem; letter-spacing: 1px; margin: 2rem 0 1rem;"><i class="fa-solid fa-users me-1"></i> Employees</p>
     <div class="d-grid gap-3 mb-4 user-section" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
         {% for u in employees %}
             <div class="user-item" data-name="{{ u.full_name|default:u.username }}" data-email="{{ u.email }}">
-                <div class="user-card text-center" style="border: 1px solid #e2e8f0; border-radius: 12px; background-color: white; padding: 1.5rem; transition: all 0.2s ease; height: 100%; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div class="user-card text-center">
                     <img src="{% if u.profile_picture %}{{ u.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={{ u.full_name|urlencode }}&background=cbd5e1&color=475569{% endif %}" alt="{{ u.full_name }}" style="width: 72px; height: 72px; border-radius: 50%; border: 3px solid #f8fafc; margin-bottom: 0.75rem; object-fit: cover;">
-                    <h6 class="fw-bold mb-0 text-navy" style="color: #0A3D91;">{{ u.full_name|default:u.username }}</h6>
+                    <h6 class="fw-bold mb-0 text-navy">{{ u.full_name|default:u.username }}</h6>
                     <p class="text-muted small mb-1">{{ u.email }}</p>
                     <p class="text-secondary small mb-2"><i class="fa-solid fa-briefcase me-1"></i>{{ u.department }}</p>
                     <span class="badge rounded-pill px-3 mb-3 bg-secondary text-white" style="font-size:0.7rem;">

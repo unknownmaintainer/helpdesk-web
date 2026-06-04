@@ -46,6 +46,7 @@ IT-Helpdesk-Security-Incident-Tracker-Spec.md
 docs/
 *.docx
 *.pdf
+deliverables/
 
 # Backups & Temporary files
 *.bak
