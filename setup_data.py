@@ -12,25 +12,25 @@ def seed_data():
         {
             'username': 'admin',
             'email': 'admin@gmail.com',
-            'full_name': 'Alice Johnson',
+            'full_name': 'Rostom Balboa',
             'role': 'manager',
-            'department': 'IT & Systems',
+            'department': 'IT Specialist',
             'password': 'admin123'
         },
         {
             'username': 'employee',
             'email': 'employee@gmail.com',
-            'full_name': 'Bob Smith',
+            'full_name': 'Mardion Fuerte',
             'role': 'employee',
-            'department': 'Human Resources',
+            'department': 'Engineering',
             'password': 'password123'
         },
         {
             'username': 'dev',
             'email': 'dev@gmail.com',
-            'full_name': 'Charlie Brown',
+            'full_name': 'Ella Abainza',
             'role': 'employee',
-            'department': 'Engineering',
+            'department': 'Human Resources',
             'password': 'password123'
         }
     ]

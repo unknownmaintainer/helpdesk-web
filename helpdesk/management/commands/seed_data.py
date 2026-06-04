@@ -19,8 +19,8 @@ class Command(BaseCommand):
             email='employee@gmail.com',
             password='password123',
             role='employee',
-            full_name='Bob Smith',
-            department='Human Resources'
+            full_name='Mardion Fuerte',
+            department='Engineering'
         )
         
         # Manager / Admin
@@ -29,8 +29,8 @@ class Command(BaseCommand):
             email='admin@gmail.com',
             password='admin123',
             role='manager',
-            full_name='Alice Johnson',
-            department='IT & Systems'
+            full_name='Rostom Balboa',
+            department='IT Specialist'
         )
         
         # Developer
@@ -39,8 +39,8 @@ class Command(BaseCommand):
             email='dev@gmail.com',
             password='password123',
             role='employee',
-            full_name='Charlie Brown',
-            department='Engineering'
+            full_name='Ella Abainza',
+            department='Human Resources'
         )
 
         self.stdout.write(self.style.SUCCESS("Users created successfully."))
