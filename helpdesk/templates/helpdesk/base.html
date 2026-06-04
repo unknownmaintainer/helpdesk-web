@@ -1,0 +1,220 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}IT Helpdesk & Incident Tracker{% endblock %}</title>
+    <meta name="description" content="Secure IT Helpdesk &amp; Incident Tracker">
+
+    <!-- CSS frameworks and fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=4">
+    {% block extra_css %}{% endblock %}
+    <style>
+        /* Smooth Toast Fading & Slide-up */
+        .toast {
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 10px !important;
+        }
+        .toast.fade-out {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        /* ── Colored KPI Cards (always override base .kpi white) ── */
+        .kpi.kpi-colored { background: unset !important; border: none !important; border-left: none !important; }
+        .kpi.kpi-colored.kpi-blue  { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important; }
+        .kpi.kpi-colored.kpi-orange{ background: linear-gradient(135deg, #c2410c 0%, #f97316 100%) !important; }
+        .kpi.kpi-colored.kpi-green { background: linear-gradient(135deg, #065f46 0%, #10b981 100%) !important; }
+        .kpi.kpi-colored.kpi-gray  { background: linear-gradient(135deg, #374151 0%, #6b7280 100%) !important; }
+        .kpi.kpi-colored.kpi-purple{ background: linear-gradient(135deg, #5b21b6 0%, #8b5cf6 100%) !important; }
+        .kpi.kpi-colored.kpi-teal  { background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%) !important; }
+        .kpi.kpi-colored .kpi-bg-icon { position: absolute; right: -15px; bottom: -15px; font-size: 5.5rem; opacity: 0.12; color: #fff; transform: rotate(-10deg); pointer-events: none; z-index: 1; transition: transform 0.3s ease, opacity 0.3s ease; }
+        .kpi.kpi-colored:hover .kpi-bg-icon { transform: scale(1.15) rotate(-5deg); opacity: 0.18; }
+        body.dark-mode .kpi.kpi-colored.kpi-blue  { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important; }
+        body.dark-mode .kpi.kpi-colored.kpi-orange{ background: linear-gradient(135deg, #9a3412 0%, #ea580c 100%) !important; }
+        body.dark-mode .kpi.kpi-colored.kpi-green { background: linear-gradient(135deg, #064e3b 0%, #059669 100%) !important; }
+        body.dark-mode .kpi.kpi-colored.kpi-gray  { background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%) !important; }
+        body.dark-mode .kpi.kpi-colored.kpi-purple{ background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%) !important; }
+        body.dark-mode .kpi.kpi-colored.kpi-teal  { background: linear-gradient(135deg, #115e59 0%, #0d9488 100%) !important; }
+        body.dark-mode .text-dark {
+            color: #f8fafc !important;
+        }
+        /* Suppress Microsoft Edge / IE native password reveal and clear buttons */
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    {% if request.user.is_authenticated %}
+    <!-- Hamburger Toggle -->
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation Menu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </button>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="brand text-center text-white">
+            <i class="fa-solid fa-headset me-2 text-warning"></i>IT Helpdesk
+        </div>
+        <nav class="mt-2">
+            <ul class="nav-menu">
+                <li class="nav-item {% if active_tab == 'dashboard' %}active{% endif %}" id="nav-dashboard">
+                    <a href="{% url 'dashboard' %}" class="nav-link"><i class="fa-solid fa-house fa-fw"></i> Dashboard</a>
+                </li>
+                <li class="nav-item {% if active_tab == 'tickets' %}active{% endif %}" id="nav-tickets">
+                    <a href="{% url 'tickets' %}" class="nav-link">
+                        <i class="fa-solid fa-ticket fa-fw"></i>
+                        {% if request.user.role == 'manager' %}Tickets{% else %}My Tickets{% endif %}
+                    </a>
+                </li>
+                {% if request.user.role == 'manager' %}
+                <li class="nav-item {% if active_tab == 'users' %}active{% endif %}" id="nav-users">
+                    <a href="{% url 'users' %}" class="nav-link"><i class="fa-solid fa-users fa-fw"></i> Users</a>
+                </li>
+                <li class="nav-item {% if active_tab == 'integrations' %}active{% endif %}" id="nav-integrations">
+                    <a href="{% url 'integrations' %}" class="nav-link"><i class="fa-solid fa-plug-circle-check fa-fw"></i> Integrations</a>
+                </li>
+                <li class="nav-item {% if active_tab == 'security_logs' %}active{% endif %}" id="nav-security-logs">
+                    <a href="{% url 'security_logs' %}" class="nav-link"><i class="fa-solid fa-shield-halved fa-fw"></i> Security Logs</a>
+                </li>
+                {% endif %}
+                <li class="nav-item {% if active_tab == 'profile' %}active{% endif %}" id="nav-profile">
+                    <a href="{% url 'profile' %}" class="nav-link"><i class="fa-solid fa-user fa-fw"></i> Profile</a>
+                </li>
+                <li class="nav-item {% if active_tab == 'settings' %}active{% endif %}" id="nav-settings">
+                    <a href="{% url 'settings' %}" class="nav-link"><i class="fa-solid fa-gear fa-fw"></i> Settings</a>
+                </li>
+                <li class="nav-item nav-item-logout">
+                    <a href="{% url 'logout' %}" class="nav-link logout"><i class="fa-solid fa-right-from-bracket fa-fw"></i> Logout</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+
+    <!-- Main Content Canvas -->
+    <div class="main">
+        <div class="content-wrapper" style="max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;">
+            {% if request.user.is_authenticated %}
+            <!-- Topbar -->
+            <div class="topbar">
+                <div class="topbar-left d-flex align-items-center gap-3">
+                    {% block back_link %}{% endblock %}
+                    <h4 class="mb-0 fw-bold">{% block page_title %}{% endblock %}</h4>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="container-fluid p-0">
+                {% if messages %}
+                <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-3" style="z-index: 1080;">
+                    {% for message in messages %}
+                    <div class="toast show align-items-center text-white {% if message.tags == 'error' %}bg-danger{% else %}bg-success{% endif %} border-0"
+                        role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                {{ message }}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    {% block modals %}{% endblock %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle (Mobile)
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        function toggleMenu() {
+            if (menuToggle && sidebar && overlay) {
+                menuToggle.classList.toggle('active');
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('show');
+            }
+        }
+        if (menuToggle) menuToggle.addEventListener('click', toggleMenu);
+        if (overlay) overlay.addEventListener('click', toggleMenu);
+
+        // Global Event Delegation for filters
+        document.body.addEventListener('click', function (e) {
+            const dropdownItem = e.target.closest('.custom-filter-dropdown .dropdown-item');
+            if (dropdownItem) {
+                e.preventDefault();
+                const dropdown = dropdownItem.closest('.custom-filter-dropdown');
+                const buttonText = dropdown.querySelector('.dropdown-toggle span');
+                const input = dropdown.querySelector('input[type="hidden"]');
+                const val = dropdownItem.getAttribute('data-value');
+                const text = dropdownItem.textContent;
+
+                if (input) input.value = val;
+                if (buttonText) buttonText.textContent = text;
+
+                dropdown.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('active'));
+                dropdownItem.classList.add('active');
+
+                const form = dropdown.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            }
+        });
+
+        // Select-All Checkboxes
+        document.body.addEventListener('change', function (e) {
+            if (e.target.id === 'selectAllTickets') {
+                document.querySelectorAll('.ticket-select-cb').forEach(cb => {
+                    if (!cb.disabled) {
+                        cb.checked = e.target.checked;
+                    }
+                });
+            }
+        });
+
+        // Auto-fade and remove toast notifications
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            // Wait 3 seconds, then start fade out transition
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                // Remove from DOM after transition completes (0.5s)
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 3000);
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

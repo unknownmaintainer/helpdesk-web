@@ -1,0 +1,233 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block title %}Integrations — IT Helpdesk & Incident Tracker{% endblock %}
+{% block page_title %}System Integrations{% endblock %}
+
+{% block content %}
+<div class="py-3">
+
+    <!-- ── Page Header ─────────────────────────────────────── -->
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--navy, #0A3D91); font-size: 1.6rem;">
+                <i class="fa-solid fa-shield-halved me-2 text-warning"></i>Security Integrations
+            </h2>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                Connected monitoring services authenticate via JWT. Incidents are submitted automatically and never require manual token entry.
+            </p>
+        </div>
+        <span class="badge px-3 py-2" style="background: #dcfce7; color: #166534; font-size: 0.8rem; border-radius: 20px; border: 1px solid #bbf7d0;">
+            <i class="fa-solid fa-circle me-1" style="font-size:0.55rem; vertical-align: middle;"></i> API Status: Active
+        </span>
+    </div>
+
+    <!-- ── Stats Row ───────────────────────────────────────── -->
+    <div class="d-flex flex-wrap gap-3 mb-4">
+        <div class="flex-fill" style="min-width: 160px;">
+            <div class="kpi kpi-colored kpi-blue shadow-sm border-0">
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-bolt"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-num">{{ api_ticket_count }}</div>
+                    <div class="kpi-label">API Incidents</div>
+                </div>
+                <i class="fa-solid fa-bolt kpi-bg-icon"></i>
+            </div>
+        </div>
+        <div class="flex-fill" style="min-width: 160px;">
+            <div class="kpi kpi-colored kpi-green shadow-sm border-0">
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-plug-circle-check"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-num">4</div>
+                    <div class="kpi-label">Connected Services</div>
+                </div>
+                <i class="fa-solid fa-plug-circle-check kpi-bg-icon"></i>
+            </div>
+        </div>
+        <div class="flex-fill" style="min-width: 160px;">
+            <div class="kpi kpi-colored kpi-purple shadow-sm border-0">
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-key"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-num" style="font-size:1.25rem !important;">JWT</div>
+                    <div class="kpi-label">Auth Method</div>
+                </div>
+                <i class="fa-solid fa-key kpi-bg-icon"></i>
+            </div>
+        </div>
+        <div class="flex-fill" style="min-width: 160px;">
+            <div class="kpi kpi-colored kpi-teal shadow-sm border-0">
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-clock"></i></div>
+                <div class="kpi-content">
+                    {% if last_api_ticket %}
+                        <div class="kpi-num" style="font-size:1rem !important;">{{ last_api_ticket.created_at|date:"M d, H:i" }}</div>
+                        <div class="kpi-label">Last Incident</div>
+                    {% else %}
+                        <div class="kpi-num" style="font-size:1.1rem !important;">—</div>
+                        <div class="kpi-label">No API Incidents Yet</div>
+                    {% endif %}
+                </div>
+                <i class="fa-solid fa-clock kpi-bg-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Two-column layout ───────────────────────────────── -->
+    <div class="row g-4">
+
+        <!-- Connected Services -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0" style="border-radius: 14px; height: 100%;">
+                <div class="card-header border-0 pb-0" style="background: transparent; padding: 1.5rem 1.5rem 0.5rem;">
+                    <h5 class="fw-bold mb-0" style="color: var(--navy, #0A3D91); font-size: 1rem;">
+                        <i class="fa-solid fa-network-wired me-2 text-warning"></i>Connected Services
+                    </h5>
+                </div>
+                <div class="card-body" style="padding: 1rem 1.5rem 1.5rem;">
+                    {% for service in services %}
+                    <div class="integration-service-row">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="int-icon-box" style="background: {{ service.color_bg }}; color: {{ service.color }};">
+                                <i class="{{ service.icon }}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold" style="font-size: 0.9rem;">{{ service.name }}</div>
+                                <div class="text-muted" style="font-size: 0.78rem;">{{ service.description }}</div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="int-status-badge int-status-active">
+                                <i class="fa-solid fa-circle" style="font-size:0.5rem; vertical-align:middle;"></i> Active
+                            </span>
+                            <div class="text-muted mt-1" style="font-size:0.72rem;">JWT Bearer</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="mt-3 pt-3 border-top" style="font-size: 0.8rem; color: #64748b;">
+                        <i class="fa-solid fa-lock me-1 text-warning"></i>
+                        All services authenticate using JWT tokens obtained via <code>POST /api/token/</code>. Tokens are never stored or displayed in the UI.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Simulator Panel -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0" style="border-radius: 14px; height: 100%; background: #0f172a;">
+                <div class="card-header border-0 pb-0" style="background: transparent; padding: 1.5rem 1.5rem 0.5rem;">
+                    <h5 class="fw-bold mb-0 text-white" style="font-size: 1rem;">
+                        <i class="fa-solid fa-flask me-2 text-warning"></i>Simulate Security Alert
+                    </h5>
+                    <p class="mt-1 mb-0" style="color: #94a3b8; font-size: 0.8rem;">
+                        Trigger a test incident alert to verify active integration status, alert routing, and system logging.
+                    </p>
+                </div>
+                <div class="card-body" style="padding: 1rem 1.5rem 1.5rem;">
+
+                    <!-- Terminal-style log window -->
+                    <div id="simulatorLog" style="background:#020617; border-radius:8px; padding:1rem; font-family: 'Courier New', monospace; font-size:0.78rem; min-height:90px; color:#4ade80; border: 1px solid #1e293b; margin-bottom: 1.25rem;">
+                        <span style="color:#64748b;">▶ Integration test system ready. Select an alert type below...</span>
+                    </div>
+
+                    <div class="d-flex flex-column gap-2">
+                        <button class="sim-btn sim-btn-firewall" data-alert="firewall" onclick="triggerSimulation(this)">
+                            <i class="fa-solid fa-fire-flame-curved me-2"></i>Simulate Firewall Alert
+                        </button>
+                        <button class="sim-btn sim-btn-malware" data-alert="malware" onclick="triggerSimulation(this)">
+                            <i class="fa-solid fa-virus me-2"></i>Simulate Malware Detection
+                        </button>
+                        <button class="sim-btn sim-btn-brute" data-alert="brute_force" onclick="triggerSimulation(this)">
+                            <i class="fa-solid fa-skull-crossbones me-2"></i>Simulate Brute Force Attack
+                        </button>
+                    </div>
+
+                    <div id="simResult" class="mt-3" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /row -->
+
+    <!-- ── Last Incident Info ──────────────────────────────── -->
+    {% if last_api_ticket %}
+    <div class="card shadow-sm border-0 mt-4" style="border-radius: 14px;">
+        <div class="card-header border-0 pb-0" style="background: transparent; padding: 1.5rem 1.5rem 0.5rem;">
+            <h5 class="fw-bold mb-0" style="color: var(--navy, #0A3D91); font-size: 1rem;">
+                <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>Last Incident Received
+            </h5>
+        </div>
+        <div class="card-body" style="padding: 0.75rem 1.5rem 1.25rem;">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <span class="fw-bold" style="font-size: 0.95rem;">#{{ last_api_ticket.id }} — {{ last_api_ticket.title }}</span>
+                <span class="badge b-{{ last_api_ticket.status|lower }}">{{ last_api_ticket.status }}</span>
+                <span class="badge px-2" style="background:#fef3c7; color:#92400e; border-radius:8px;">{{ last_api_ticket.get_source_display }}</span>
+                <span class="text-muted ms-auto" style="font-size:0.8rem;">{{ last_api_ticket.created_at|date:"M d, Y H:i" }}</span>
+                <a href="{% url 'ticket_detail' last_api_ticket.id %}" class="btn btn-sm btn-primary" style="border-radius:8px; font-size:0.8rem;">
+                    View Ticket <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div><!-- /py-3 -->
+
+{% block extra_js %}
+<script>
+const CSRF = "{{ csrf_token }}";
+
+function log(msg, color) {
+    const box = document.getElementById('simulatorLog');
+    const ts = new Date().toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    box.innerHTML += `\n<span style="color:#475569;">[${ts}]</span> <span style="color:${color || '#4ade80'};">${msg}</span>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+function triggerSimulation(btn) {
+    const alertType = btn.dataset.alert;
+    const labels = {
+        firewall: 'Firewall Alert',
+        malware: 'Malware Detection',
+        brute_force: 'Brute Force Attack',
+    };
+
+    // Disable all buttons during request
+    document.querySelectorAll('.sim-btn').forEach(b => b.disabled = true);
+    log(`Triggering simulation: ${labels[alertType]}...`, '#facc15');
+
+    fetch("{% url 'simulate_alert' %}", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+        body: JSON.stringify({alert_type: alertType}),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            log(`✓ Incident created — Ticket #${data.ticket_id}: "${data.title}"`, '#4ade80');
+            log(`  Source: ${data.source} | Priority: ${data.priority}`, '#94a3b8');
+            log(`  Audit log entry written automatically.`, '#94a3b8');
+
+            const result = document.getElementById('simResult');
+            result.style.display = 'block';
+            result.innerHTML = `
+                <div class="d-flex align-items-center gap-2 p-2 rounded" style="background:#dcfce7; border:1px solid #bbf7d0;">
+                    <i class="fa-solid fa-circle-check text-success"></i>
+                    <span style="font-size:0.85rem; color:#166534;">
+                        <strong>Ticket #${data.ticket_id}</strong> created successfully.
+                        <a href="/tickets/${data.ticket_id}/" style="color:#15803d; font-weight:600;">View Ticket →</a>
+                    </span>
+                </div>`;
+        } else {
+            log(`✗ Error: ${data.error || 'Unknown error'}`, '#f87171');
+        }
+    })
+    .catch(err => {
+        log(`✗ Network error: ${err}`, '#f87171');
+    })
+    .finally(() => {
+        document.querySelectorAll('.sim-btn').forEach(b => b.disabled = false);
+    });
+}
+</script>
+{% endblock %}
+{% endblock %}

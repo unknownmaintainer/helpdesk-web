@@ -1,0 +1,68 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block title %}Create Ticket — IT Helpdesk & Incident Tracker{% endblock %}
+
+{% block back_link %}
+<a href="{% url 'tickets' %}" class="text-decoration-none text-muted" style="font-size: 1.25rem;" title="Back to Tickets">
+    <i class="fa-solid fa-arrow-left"></i>
+</a>
+{% endblock %}
+
+{% block page_title %}Create Ticket{% endblock %}
+
+{% block content %}
+<div class="py-3">
+    <div class="card shadow-sm border-0" style="border-radius: 12px;">
+        <div class="card-header bg-white border-bottom-0 py-4" style="padding: 24px 24px 0 24px;">
+            <h4 class="mb-0 fw-bold text-navy" style="color: #0A3D91;">New Support Ticket</h4>
+            <p class="text-muted small mb-0">Describe the issue clearly so IT can help faster.</p>
+        </div>
+        <div class="card-body" style="padding: 24px;">
+            <form method="POST" action="{% url 'create_ticket' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="title" class="form-label fw-semibold">Ticket Title</label>
+                    <input type="text" id="title" name="title" class="form-control" placeholder="Short summary of the issue" value="{{ title|default:'' }}" required>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="category" class="form-label fw-semibold">Category</label>
+                        <select id="category" name="category" class="form-select" required>
+                            <option value="Hardware" {% if category == 'Hardware' %}selected{% endif %}>Hardware</option>
+                            <option value="Software" {% if category == 'Software' %}selected{% endif %}>Software</option>
+                            <option value="Network" {% if category == 'Network' %}selected{% endif %}>Network</option>
+                            <option value="Account" {% if category == 'Account' %}selected{% endif %}>Account</option>
+                            <option value="Security" {% if category == 'Security' %}selected{% endif %}>Security</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="priority" class="form-label fw-semibold">Priority</label>
+                        <select id="priority" name="priority" class="form-select" required>
+                            <option value="Low" {% if priority == 'Low' %}selected{% endif %}>Low</option>
+                            <option value="Medium" {% if priority == 'Medium' or not priority %}selected{% endif %}>Medium</option>
+                            <option value="High" {% if priority == 'High' %}selected{% endif %}>High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="description" class="form-label fw-semibold">Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="6" placeholder="Provide details about the issue..." required>{{ description|default:'' }}</textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="attachment" class="form-label fw-semibold">Attachment (Optional)</label>
+                    <input type="file" id="attachment" name="attachment" class="form-control">
+                </div>
+                <div class="d-flex justify-content-end align-items-center gap-3 mt-5">
+                    <a href="{% url 'tickets' %}" class="btn-secondary-custom">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn-primary-custom">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Submit Ticket
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

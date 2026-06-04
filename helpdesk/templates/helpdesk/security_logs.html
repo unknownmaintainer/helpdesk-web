@@ -1,0 +1,319 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block title %}Security Logs — IT Helpdesk & Incident Tracker{% endblock %}
+{% block page_title %}Security Logs & Audit Trail{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Tab Navigation Styling */
+    .logs-tab-btn {
+        background: transparent;
+        border: none;
+        padding: 0.65rem 1.1rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #64748b;
+        position: relative;
+        transition: all 0.22s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 8px;
+    }
+    body.dark-mode .logs-tab-btn {
+        color: #94a3b8;
+    }
+    .logs-tab-btn:hover {
+        color: #0A3D91;
+        background-color: #f1f5f9;
+    }
+    body.dark-mode .logs-tab-btn:hover {
+        color: #f59e0b;
+        background-color: #334155;
+    }
+    .logs-tab-btn.active {
+        color: #0A3D91;
+        background-color: #e0f2fe;
+    }
+    body.dark-mode .logs-tab-btn.active {
+        color: #f59e0b;
+        background-color: rgba(245, 158, 11, 0.15);
+    }
+
+    /* Log list items */
+    .log-card {
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-radius: 12px;
+        transition: all 0.22s ease;
+    }
+    body.dark-mode .log-card {
+        border-color: #334155 !important;
+        background: #1e293b !important;
+    }
+    .log-card:hover {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+    }
+    body.dark-mode .log-card:hover {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+
+    .log-badge-success { background: #dcfce7; color: #166534; }
+    .log-badge-failed { background: #fee2e2; color: #991b1b; }
+    body.dark-mode .log-badge-success { background: rgba(22, 101, 52, 0.2) !important; color: #4ade80 !important; }
+    body.dark-mode .log-badge-failed { background: rgba(153, 27, 27, 0.2) !important; color: #f87171 !important; }
+
+    /* Dark Mode Custom Overrides */
+    body.dark-mode .log-card .fw-bold.text-dark {
+        color: #f8fafc !important;
+    }
+    body.dark-mode .log-card .text-secondary {
+        color: #94a3b8 !important;
+    }
+    body.dark-mode .log-card .bg-light.border {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+    }
+    body.dark-mode .icon-badge.bg-light {
+        background-color: #334155 !important;
+        color: #f59e0b !important;
+    }
+    body.dark-mode .input-group-text.bg-light,
+    body.dark-mode .form-control.bg-light {
+        background-color: #334155 !important;
+        color: #cbd5e1 !important;
+    }
+    body.dark-mode .btn-outline-secondary {
+        color: #cbd5e1 !important;
+        border-color: #475569 !important;
+    }
+    body.dark-mode .btn-outline-secondary:hover {
+        background-color: #334155 !important;
+        color: #fff !important;
+    }
+    body.dark-mode .page-link {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-3">
+
+    <!-- Responsive Toolbar Card -->
+    <div class="card mb-4 shadow-sm border-0" style="border-radius: 12px;">
+        <div class="card-body d-flex flex-column flex-md-row gap-3 justify-content-between align-items-md-center" style="padding: 20px 24px;">
+            
+            <!-- Left: Tab Navigation Buttons -->
+            <div class="d-flex gap-2">
+                <button class="logs-tab-btn active" id="tab-btn-audit" onclick="switchTab('audit')">
+                    <i class="fa-solid fa-list-check me-2"></i>Security Audit Log
+                </button>
+                <button class="logs-tab-btn" id="tab-btn-login" onclick="switchTab('login')">
+                    <i class="fa-solid fa-user-shield me-2"></i>Login History
+                </button>
+            </div>
+            
+            <!-- Right: Search Input Group & Controls -->
+            <form method="GET" action="{% url 'security_logs' %}" class="d-flex gap-2 flex-nowrap align-items-center flex-grow-1 flex-md-grow-0 justify-content-end">
+                <div class="input-group" style="max-width: 280px;">
+                    <span class="input-group-text bg-light border-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" name="q" class="form-control bg-light border-0" placeholder="Search logs..." value="{{ query }}">
+                </div>
+                <button type="submit" class="btn-primary-custom px-3 py-2 flex-shrink-0" style="border-radius: 8px; font-size: 0.9rem;">Filter</button>
+                {% if query or status_filter != 'all' %}
+                    <a href="{% url 'security_logs' %}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="border-radius: 8px; width: 38px; height: 38px;" title="Clear filters">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                {% endif %}
+            </form>
+
+        </div>
+    </div>
+
+    <!-- ================== TAB 1: AUDIT EVENT LOGS ================== -->
+    <div id="tab-content-audit" class="tab-pane-custom">
+        {% if event_page_obj %}
+            <div class="d-flex flex-column gap-3 mb-4">
+                {% for log in event_page_obj %}
+                    <div class="log-card p-4 shadow-sm">
+                        <div class="d-flex align-items-start gap-3 justify-content-between flex-wrap">
+                            <div class="d-flex gap-3 align-items-start flex-grow-1">
+                                <div class="icon-badge bg-light text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:44px; height:44px; flex-shrink:0;">
+                                    <i class="fa-solid fa-user-gear fa-lg"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold text-dark" style="font-size: 1rem;">
+                                        {{ log.changed_by.full_name|default:log.changed_by.username }}
+                                    </div>
+                                    <div class="text-secondary small mt-0.5">
+                                        {{ log.changed_by.email }}
+                                    </div>
+                                    <div class="text-muted mt-3 font-monospace p-3 rounded bg-light border" style="font-size: 0.82rem; line-height: 1.55; word-break: break-all; border-radius: 8px;">
+                                        {{ log.change_description }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-muted small text-start text-md-end flex-shrink-0 mt-2 mt-md-0">
+                                <div class="fw-semibold"><i class="fa-regular fa-calendar me-1"></i>{{ log.timestamp|date:"M d, Y" }}</div>
+                                <div class="mt-1" style="font-size:0.78rem;"><i class="fa-regular fa-clock me-1"></i>{{ log.timestamp|date:"H:i:s" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination for Audit Events -->
+            {% if event_page_obj.has_other_pages %}
+                <nav aria-label="Audit logs pagination" class="mt-4">
+                    <ul class="pagination pagination-sm justify-content-center">
+                        {% if event_page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?event_page={{ event_page_obj.previous_page_number }}&q={{ query }}" style="border-radius: 8px 0 0 8px;">Previous</a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item disabled">
+                            <span class="page-link text-dark fw-bold">Page {{ event_page_obj.number }} of {{ event_page_obj.paginator.num_pages }}</span>
+                        </li>
+                        {% if event_page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?event_page={{ event_page_obj.next_page_number }}&q={{ query }}" style="border-radius: 0 8px 8px 0;">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-folder-open text-muted mb-3" style="font-size: 3rem;"></i>
+                <h5 class="fw-semibold text-secondary">No Audit Log Found</h5>
+                <p class="text-muted small">No security events match the current search filters.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ================== TAB 2: LOGIN HISTORY LOGS ================== -->
+    <div id="tab-content-login" class="tab-pane-custom" style="display:none;">
+        
+        <!-- Status Filter Badges/Buttons -->
+        <div class="mb-4 d-flex justify-content-start gap-2 flex-wrap">
+            <a href="?status=all&q={{ query }}" class="btn btn-sm {% if status_filter == 'all' or not status_filter %}btn-primary-custom{% else %}btn-outline-secondary{% endif %}" onclick="saveTabState('login')" style="border-radius: 20px; font-size: 0.8rem; padding: 5px 16px; font-weight: 600;">All Attempts</a>
+            <a href="?status=success&q={{ query }}" class="btn btn-sm {% if status_filter == 'success' %}btn-success text-white{% else %}btn-outline-success{% endif %}" onclick="saveTabState('login')" style="border-radius: 20px; font-size: 0.8rem; padding: 5px 16px; font-weight: 600;">Successful Logins</a>
+            <a href="?status=failed&q={{ query }}" class="btn btn-sm {% if status_filter == 'failed' %}btn-danger text-white{% else %}btn-outline-danger{% endif %}" onclick="saveTabState('login')" style="border-radius: 20px; font-size: 0.8rem; padding: 5px 16px; font-weight: 600;">Failed Logins</a>
+        </div>
+
+        {% if login_page_obj %}
+            <div class="d-flex flex-column gap-3 mb-4">
+                {% for attempt in login_page_obj %}
+                    <div class="log-card p-4 shadow-sm">
+                        <div class="d-flex align-items-center gap-3 justify-content-between flex-wrap">
+                            <div class="d-flex gap-3 align-items-center flex-grow-1">
+                                <div class="icon-badge bg-light text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:44px; height:44px; flex-shrink:0;">
+                                    <i class="fa-solid fa-key fa-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark" style="font-size: 1rem;">
+                                        {{ attempt.email_attempted }}
+                                    </div>
+                                    <div class="text-secondary small mt-0.5">
+                                        IP Address: <code style="font-size: 0.85rem; padding: 2px 6px; background: rgba(0,0,0,0.03); border-radius: 4px;">{{ attempt.ip_address|default:"127.0.0.1" }}</code>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 flex-wrap flex-shrink-0 mt-2 mt-sm-0">
+                                <span class="badge px-3 py-2 rounded-pill {% if attempt.success %}log-badge-success{% else %}log-badge-failed{% endif %}" style="font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                    {% if attempt.success %}
+                                        <i class="fa-solid fa-circle-check"></i> Success
+                                    {% else %}
+                                        <i class="fa-solid fa-circle-xmark"></i> Failed
+                                    {% endif %}
+                                </span>
+                                <div class="text-muted small text-start text-md-end ms-md-2 mt-2 mt-md-0">
+                                    <div class="fw-semibold"><i class="fa-regular fa-calendar me-1"></i>{{ attempt.timestamp|date:"M d, Y" }}</div>
+                                    <div class="mt-1" style="font-size:0.78rem;"><i class="fa-regular fa-clock me-1"></i>{{ attempt.timestamp|date:"H:i:s" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination for Login History -->
+            {% if login_page_obj.has_other_pages %}
+                <nav aria-label="Login history pagination" class="mt-4">
+                    <ul class="pagination pagination-sm justify-content-center">
+                        {% if login_page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?login_page={{ login_page_obj.previous_page_number }}&status={{ status_filter }}&q={{ query }}" style="border-radius: 8px 0 0 8px;">Previous</a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item disabled">
+                            <span class="page-link text-dark fw-bold">Page {{ login_page_obj.number }} of {{ login_page_obj.paginator.num_pages }}</span>
+                        </li>
+                        {% if login_page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?login_page={{ login_page_obj.next_page_number }}&status={{ status_filter }}&q={{ query }}" style="border-radius: 0 8px 8px 0;">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-shield-halved text-muted mb-3" style="font-size: 3rem;"></i>
+                <h5 class="fw-semibold text-secondary">No Login Records Found</h5>
+                <p class="text-muted small">No authentication history matches the search filters.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    // Save tab selection state across page reloads
+    function saveTabState(tabName) {
+        localStorage.setItem('active_logs_tab', tabName);
+    }
+
+    function switchTab(tabName) {
+        saveTabState(tabName);
+        
+        const tabAudit = document.getElementById('tab-content-audit');
+        const tabLogin = document.getElementById('tab-content-login');
+        const btnAudit = document.getElementById('tab-btn-audit');
+        const btnLogin = document.getElementById('tab-btn-login');
+
+        if (tabName === 'audit') {
+            tabAudit.style.display = 'block';
+            tabLogin.style.display = 'none';
+            btnAudit.classList.add('active');
+            btnLogin.classList.remove('active');
+        } else {
+            tabAudit.style.display = 'none';
+            tabLogin.style.display = 'block';
+            btnAudit.classList.remove('active');
+            btnLogin.classList.add('active');
+        }
+    }
+
+    // Restore selected tab on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const activeTab = localStorage.getItem('active_logs_tab') || 'audit';
+        
+        // Also check if paginating a specific tab to auto-focus it
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('login_page') || urlParams.has('status')) {
+            switchTab('login');
+        } else if (urlParams.has('event_page')) {
+            switchTab('audit');
+        } else {
+            switchTab(activeTab);
+        }
+    });
+</script>
+{% endblock %}

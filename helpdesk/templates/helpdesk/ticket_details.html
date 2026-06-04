@@ -1,0 +1,305 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block title %}Ticket #{{ ticket.id }} Details — IT Helpdesk & Incident Tracker{% endblock %}
+
+{% block back_link %}
+<a href="{% url 'tickets' %}" class="text-decoration-none text-muted" style="font-size: 1.25rem;" title="Back to Tickets">
+    <i class="fa-solid fa-arrow-left"></i>
+</a>
+{% endblock %}
+
+{% block page_title %}Ticket #{{ ticket.id }} Details{% endblock %}
+
+{% block content %}
+<div class="py-2 d-flex flex-column gap-3">
+    
+    <!-- 2. TICKET INFO -->
+    <div class="card shadow-sm border-0" style="padding: 20px 24px; border-radius: 12px; border-left: 5px solid {% if ticket.priority == 'High' %}#ef4444{% elif ticket.priority == 'Medium' %}#f59e0b{% else %}#3b82f6{% endif %} !important;">
+        
+        <!-- NIST Progress Bar -->
+        <div class="nist-stepper-container mb-4 pb-3 border-bottom">
+            <span class="fw-bold d-block text-uppercase text-secondary mb-2 text-center" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                <i class="fa-solid fa-shield-halved me-1 text-primary"></i> NIST Incident Response Stage
+            </span>
+            <div class="nist-stepper">
+                {% for step in timeline_steps %}
+                    <div class="stepper-item {% if step.status == 'done' %}completed{% elif step.status == 'active' %}active{% else %}pending{% endif %}">
+                        <div class="stepper-line"></div>
+                        <div class="stepper-circle">
+                            {% if step.status == 'done' %}
+                                <i class="fa-solid fa-check"></i>
+                            {% else %}
+                                {{ forloop.counter }}
+                            {% endif %}
+                        </div>
+                        <div class="stepper-label-wrapper">
+                            <span class="stepper-label">{{ step.label }}</span>
+                            <span class="stepper-nist">{{ step.nist }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge 
+                    {% if ticket.category == 'Security' %}
+                        bg-danger-subtle text-danger
+                    {% elif ticket.category == 'Network' %}
+                        bg-info-subtle text-info
+                    {% elif ticket.category == 'Hardware' %}
+                        bg-warning-subtle text-warning-emphasis
+                    {% elif ticket.category == 'Software' %}
+                        bg-primary-subtle text-primary
+                    {% else %}
+                        bg-secondary-subtle text-secondary
+                    {% endif %}
+                    text-uppercase fw-bold" style="font-size:0.75rem;">
+                    {{ ticket.category }}
+                </span>
+                <span class="badge {{ ticket.status_badge_class }}">{{ ticket.status }}</span>
+                {% if ticket.source != 'employee' %}
+                <span class="badge px-2 py-1" style="background:#fef3c7; color:#92400e; border-radius:8px; font-size:0.72rem; font-weight:600;">
+                    <i class="fa-solid fa-robot me-1" style="font-size:0.65rem;"></i>{{ ticket.get_source_display }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+                {% if can_edit %}
+                    <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 py-2 px-3" data-bs-toggle="modal" data-bs-target="#editTicketModal" style="border-radius: 8px; font-weight: 600; font-size: 0.8rem;">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                    </button>
+                {% endif %}
+                {% if can_delete %}
+                    <button type="button" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1 py-2 px-3" data-bs-toggle="modal" data-bs-target="#deleteTicketModal" style="border-radius: 8px; font-weight: 600; font-size: 0.8rem;">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        <h3 class="fw-bold text-navy mb-3" style="color: #0A3D91;">{{ ticket.title }}</h3>
+        
+        <!-- Description Area -->
+        <div class="mb-4">
+            <span class="fw-bold d-block text-uppercase text-secondary mb-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Description</span>
+            <div class="text-dark bg-light p-3 rounded small" style="white-space: pre-wrap; line-height: 1.6;">
+                {{ ticket.description }}
+            </div>
+        </div>
+        
+        <div class="d-flex flex-wrap gap-3 border-top pt-3 text-muted" style="font-size: 0.85rem;">
+            <div style="flex: 1 1 200px;">
+                <span class="fw-bold d-block text-uppercase text-secondary" style="font-size: 0.7rem;">Submitted By</span>
+                <span class="text-dark fw-semibold">{{ ticket.created_by.full_name|default:ticket.created_by.username }} ({{ ticket.created_by.department }})</span>
+            </div>
+            <div style="flex: 1 1 200px;">
+                <span class="fw-bold d-block text-uppercase text-secondary" style="font-size: 0.7rem;">Submitted On</span>
+                <span class="text-dark"><i class="fa-regular fa-calendar me-1"></i>{{ ticket.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div style="flex: 1 1 200px;">
+                <span class="fw-bold d-block text-uppercase text-secondary" style="font-size: 0.7rem;">Priority</span>
+                <span class="badge {% if ticket.priority == 'High' %}b-high{% elif ticket.priority == 'Medium' %}b-medium{% else %}b-low{% endif %}">{{ ticket.priority }}</span>
+            </div>
+        </div>
+
+        {% if ticket.attachment %}
+            <div class="border-top mt-3 pt-3">
+                <span class="fw-bold d-block text-uppercase text-secondary mb-2" style="font-size: 0.7rem;">Attachment</span>
+                <div class="p-2 border rounded d-inline-flex align-items-center gap-2 bg-light" style="border-radius: 8px;">
+                    <i class="fa-solid fa-paperclip text-muted"></i>
+                    <a href="{{ ticket.attachment.url }}" class="text-primary text-decoration-none small fw-semibold" target="_blank">
+                        {{ ticket.attachment_filename }}
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- IT Manager Controls Panel (Middle) -->
+    {% if role == 'manager' %}
+        <div class="card shadow-sm border-0" style="padding: 24px; border-radius: 12px;">
+            <h5 class="fw-bold text-navy mb-3" style="color: #0A3D91;"><i class="fa-solid fa-user-gear me-2"></i>IT Manager Controls</h5>
+            
+            <form method="POST" action="{% url 'ticket_detail' ticket.id %}" class="mb-0">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_status">
+                <div class="d-flex flex-column flex-md-row gap-3 align-items-md-end">
+                    <div style="flex: 2; min-width: 0;">
+                        <label class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem;">Update Ticket Workflow Status</label>
+                        <select name="status" class="form-select">
+                            <option value="Open" {% if ticket.status == 'Open' %}selected{% endif %}>Open (Detection)</option>
+                            <option value="Investigating" {% if ticket.status == 'Investigating' %}selected{% endif %}>Investigating (Analysis / Containment)</option>
+                            <option value="Resolved" {% if ticket.status == 'Resolved' %}selected{% endif %}>Resolved (Recovery)</option>
+                            <option value="Closed" {% if ticket.status == 'Closed' %}selected{% endif %}>Closed (Post-Incident Review)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <button type="submit" class="btn-primary-custom w-100 justify-content-center py-2" style="border-radius: 8px;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Update Status
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- 2. CONVERSATION / UPDATES (MIDDLE) -->
+    <div class="card shadow-sm border-0" style="padding: 24px; border-radius: 12px;">
+        <h5 class="fw-bold text-navy mb-3" style="color: #0A3D91;"><i class="fa-solid fa-comments me-2"></i>Manager Updates & Notes</h5>
+        
+        <!-- List of Comments -->
+        <div class="d-flex flex-column gap-3 mb-4">
+            {% for update in updates %}
+                <div class="p-3 rounded border {% if update.updated_by.role == 'manager' %}bg-primary bg-opacity-10 border-primary border-opacity-20{% else %}bg-light border-secondary border-opacity-20{% endif %}" style="border-radius: 10px;">
+                    <div class="d-flex align-items-center justify-content-between mb-2" style="font-size:0.75rem;">
+                        <span class="fw-bold text-dark">
+                            <i class="fa-solid {% if update.updated_by.role == 'manager' %}fa-user-shield text-navy{% else %}fa-user text-secondary{% endif %} me-1"></i>
+                            {{ update.updated_by.full_name|default:update.updated_by.username }}
+                        </span>
+                        <span class="text-muted"><i class="fa-regular fa-clock me-1"></i>{{ update.created_at|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    <p class="mb-0 text-dark" style="white-space: pre-wrap; font-size: 0.85rem; line-height: 1.5;">{{ update.comment }}</p>
+                </div>
+            {% empty %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fa-regular fa-comment-dots fa-2x mb-2 text-secondary" style="opacity: 0.5;"></i>
+                    <p class="small mb-0">No updates or notes recorded yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Add Comment Form (IT Managers only) -->
+        {% if role == 'manager' %}
+            <form method="POST" action="{% url 'ticket_detail' ticket.id %}" class="mt-2 pt-3 border-top">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_note">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary text-uppercase" style="font-size:0.7rem;">Add Ticket Note</label>
+                    <textarea name="comment" class="form-control" rows="3" placeholder="Add a comment or note..." required style="font-size:0.875rem; border-radius:10px;"></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn-primary-custom" style="padding: 6px 16px;">
+                        <i class="fa-regular fa-paper-plane me-1"></i> Post Note
+                    </button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+
+    <!-- ── Incident Audit Log Timeline ────────────────────── -->
+    {% if ticket.audit_logs.all %}
+    <div class="card shadow-sm border-0" style="padding: 24px; border-radius: 12px;">
+        <h5 class="fw-bold mb-4" style="color: #0A3D91;">
+            <i class="fa-solid fa-timeline me-2 text-warning"></i>Incident Audit Trail
+        </h5>
+        <div class="audit-timeline">
+            {% for entry in ticket.audit_logs.all %}
+            <div class="audit-timeline-item">
+                <div class="audit-dot"></div>
+                <div class="audit-content">
+                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                        <span class="audit-actor-badge">{{ entry.actor_label }}</span>
+                        <span class="text-muted" style="font-size:0.75rem;">
+                            <i class="fa-regular fa-clock me-1"></i>{{ entry.timestamp|date:"M d, Y — H:i" }}
+                        </span>
+                    </div>
+                    <p class="mb-0" style="font-size:0.875rem; color:#334155;">{{ entry.action }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block modals %}
+    {% if can_edit %}
+    <!-- Edit Ticket Modal -->
+    <div class="modal fade" id="editTicketModal" tabindex="-1" aria-labelledby="editTicketModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-navy" id="editTicketModalLabel" style="color: #0A3D91;">Edit Ticket #{{ ticket.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{% url 'ticket_detail' ticket.id %}" enctype="multipart/form-data" class="mb-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit_ticket">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label for="edit-title" class="form-label fw-semibold">Ticket Title</label>
+                            <input type="text" id="edit-title" name="title" class="form-control" value="{{ ticket.title }}" required>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="edit-category" class="form-label fw-semibold">Category</label>
+                                <select id="edit-category" name="category" class="form-select" required>
+                                    <option value="Hardware" {% if ticket.category == 'Hardware' %}selected{% endif %}>Hardware</option>
+                                    <option value="Software" {% if ticket.category == 'Software' %}selected{% endif %}>Software</option>
+                                    <option value="Network" {% if ticket.category == 'Network' %}selected{% endif %}>Network</option>
+                                    <option value="Account" {% if ticket.category == 'Account' %}selected{% endif %}>Account</option>
+                                    <option value="Security" {% if ticket.category == 'Security' %}selected{% endif %}>Security</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit-priority" class="form-label fw-semibold">Priority</label>
+                                <select id="edit-priority" name="priority" class="form-select" required>
+                                    <option value="Low" {% if ticket.priority == 'Low' %}selected{% endif %}>Low</option>
+                                    <option value="Medium" {% if ticket.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                                    <option value="High" {% if ticket.priority == 'High' %}selected{% endif %}>High</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-description" class="form-label fw-semibold">Description</label>
+                            <textarea id="edit-description" name="description" class="form-control" rows="5" required>{{ ticket.description }}</textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label for="edit-attachment" class="form-label fw-semibold">Attachment (Optional)</label>
+                            <input type="file" id="edit-attachment" name="attachment" class="form-control">
+                            {% if ticket.attachment %}
+                                <div class="mt-2 text-muted small">
+                                    Current Attachment: <a href="{{ ticket.attachment.url }}" target="_blank" class="text-primary text-decoration-none fw-semibold">{{ ticket.attachment_filename }}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+                        <button type="submit" class="btn-primary-custom px-4" style="border-radius: 8px;">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if can_delete %}
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-danger" id="deleteTicketModalLabel">Delete Ticket #{{ ticket.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{% url 'ticket_detail' ticket.id %}" class="mb-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_ticket">
+                    <div class="modal-body p-4 text-start">
+                        <p class="mb-0">Are you sure you want to delete this ticket? This action is permanent and cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+                        <button type="submit" class="btn btn-danger px-4" style="border-radius: 8px; font-weight: 600;">Delete Ticket</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

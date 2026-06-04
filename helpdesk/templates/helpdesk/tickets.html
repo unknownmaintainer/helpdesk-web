@@ -1,0 +1,368 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block title %}Tickets — IT Helpdesk & Incident Tracker{% endblock %}
+
+{% block page_title %}IT Support Requests{% endblock %}
+
+{% block content %}
+<div class="py-3">
+    <!-- Filter Card (Search and Status only) -->
+    <div class="card mb-4 shadow-sm border-0" style="border-radius: 12px; position: relative; z-index: 15;">
+        <div class="card-body py-3">
+            <form id="filterForm" method="GET" action="{% url 'tickets' %}" class="d-flex flex-wrap gap-3 justify-content-between align-items-center">
+                <div class="d-flex gap-2 align-items-center flex-wrap flex-grow-1">
+                    <!-- Search bar -->
+                    <div class="input-group" style="max-width:280px;">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0" placeholder="Search tickets..." value="{{ search_query }}">
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="dropdown custom-filter-dropdown" id="dropdown-status">
+                        <button class="btn dropdown-toggle custom-dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border: 1.5px solid #cbd5e1; border-radius: 8px; background: #f8fafc; font-weight: 500; font-size: 0.9rem;">
+                            <span>
+                                {% if status_filter == 'Open' %}
+                                    <span class="status-dot-indicator bg-primary me-2"></span>Open
+                                {% elif status_filter == 'Investigating' %}
+                                    <span class="status-dot-indicator bg-info me-2"></span>Investigating
+                                {% elif status_filter == 'Resolved' %}
+                                    <span class="status-dot-indicator bg-success me-2"></span>Resolved
+                                {% elif status_filter == 'Closed' %}
+                                    <span class="status-dot-indicator bg-secondary me-2"></span>Closed
+                                {% else %}
+                                    <i class="fa-solid fa-bars-staggered me-2 text-muted"></i>All Statuses
+                                {% endif %}
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item {% if not status_filter %}active{% endif %}" href="#" data-value=""><i class="fa-solid fa-bars-staggered me-2 text-muted"></i>All Statuses</a></li>
+                            <li><a class="dropdown-item {% if status_filter == 'Open' %}active{% endif %}" href="#" data-value="Open"><span class="status-dot-indicator bg-primary me-2"></span>Open</a></li>
+                            <li><a class="dropdown-item {% if status_filter == 'Investigating' %}active{% endif %}" href="#" data-value="Investigating"><span class="status-dot-indicator bg-info me-2"></span>Investigating</a></li>
+                            <li><a class="dropdown-item {% if status_filter == 'Resolved' %}active{% endif %}" href="#" data-value="Resolved"><span class="status-dot-indicator bg-success me-2"></span>Resolved</a></li>
+                            <li><a class="dropdown-item {% if status_filter == 'Closed' %}active{% endif %}" href="#" data-value="Closed"><span class="status-dot-indicator bg-secondary me-2"></span>Closed</a></li>
+                        </ul>
+                        <input type="hidden" name="status" value="{{ status_filter|default:'' }}">
+                    </div>
+
+                    {% if search_query or status_filter %}
+                        <a href="{% url 'tickets' %}" class="btn btn-link text-decoration-none text-muted small ps-1">Clear Filters</a>
+                    {% endif %}
+                </div>
+
+                {% if role == 'employee' %}
+                    <a href="{% url 'create_ticket' %}" class="btn-primary-custom">
+                        <i class="fa-solid fa-plus me-1"></i> Create Ticket
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Tickets List Canvas -->
+    <div id="tickets-list-container">
+        {% if role == 'employee' %}
+        <!-- ========================================== -->
+        <!-- EMPLOYEE TICKET CARDS LAYOUT               -->
+        <!-- ========================================== -->
+        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            {% for ticket in tickets %}
+            <div class="card h-100 shadow-sm border-0 bg-white hover-card" style="padding: 24px; border-radius: 12px; cursor: pointer;" onclick="window.location.href='{% url 'ticket_detail' ticket.id %}';">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge bg-secondary-subtle text-secondary text-uppercase fw-bold" style="font-size: 0.7rem;">{{ ticket.category }}</span>
+                    <span class="badge {{ ticket.status_badge_class }}">{{ ticket.status }}</span>
+                </div>
+                <h5 class="fw-bold text-navy mb-2" style="color: #0A3D91;">{{ ticket.title }}</h5>
+                <p class="text-muted text-truncate-2 small mb-4" style="line-height: 1.5;">{{ ticket.description }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3 text-muted" style="font-size: 0.8rem;">
+                    <span>Ticket #{{ ticket.id }}</span>
+                    <span>Submitted {{ ticket.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="w-100 text-center py-5 text-muted bg-white border rounded shadow-sm" style="border-radius: 12px; grid-column: 1 / -1;">
+                <i class="fa-regular fa-folder-open fa-3x mb-3 text-secondary" style="opacity: 0.5;"></i>
+                <p class="fw-bold mb-0">No support tickets found.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if tickets.has_other_pages %}
+        <div class="d-flex justify-content-center mt-4">
+            <nav aria-label="Support tickets pagination">
+                <ul class="pagination pagination-sm justify-content-center">
+                    {% if tickets.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ tickets.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}" style="border-radius: 8px 0 0 8px;">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link text-dark fw-bold">Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}</span>
+                    </li>
+                    {% if tickets.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ tickets.next_page_number }}&search={{ search_query }}&status={{ status_filter }}" style="border-radius: 0 8px 8px 0;">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <!-- ========================================== -->
+        <!-- IT MANAGER TICKET TABLE LAYOUT             -->
+        <!-- ========================================== -->
+        <div class="card ajax-container shadow-sm border-0" id="ticketsSupportCard" style="border-radius: 12px;">
+            <form method="POST" action="{% url 'tickets' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="close">
+                
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-navy" style="color: #0A3D91;"><i class="fa-solid fa-list-check me-2"></i>Support Ticket Queue</span>
+                    
+                    <!-- Bulk Close button: Only show when status filter is set to "Resolved" -->
+                    {% if status_filter == 'Resolved' %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger px-3" style="border-radius:6px;" onclick="return confirm('Bulk close selected resolved tickets?');">
+                            <i class="fa-solid fa-folder-closed me-1"></i>Close Selected
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-simple mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <!-- Bulk check checkbox: Only show when status filter is set to "Resolved" -->
+                                    {% if status_filter == 'Resolved' %}
+                                        <th style="width: 40px;"><input type="checkbox" id="selectAllTickets"></th>
+                                    {% endif %}
+                                    <th class="text-nowrap" style="width: 1%;">ID</th>
+                                    <th class="text-nowrap" style="width: 1%;">Employee</th>
+                                    <th>Title</th>
+                                    <th class="text-nowrap" style="width: 1%; min-width: 100px;">Status</th>
+                                    <th class="text-nowrap" style="width: 1%; min-width: 110px;">Date</th>
+                                    <th class="text-nowrap" style="width: 1%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in tickets %}
+                                <tr>
+                                    {% if status_filter == 'Resolved' %}
+                                        <td>
+                                            <input type="checkbox" name="selected_tickets" value="{{ ticket.id }}" class="ticket-select-cb">
+                                        </td>
+                                    {% endif %}
+                                    <td class="fw-bold text-navy text-nowrap">#{{ ticket.id }}</td>
+                                    <td class="text-nowrap">{{ ticket.created_by.full_name|default:ticket.created_by.username }}</td>
+                                    <td class="text-truncate fw-semibold" style="max-width: 240px;">{{ ticket.title }}</td>
+                                    <td class="text-nowrap" style="white-space: nowrap;">
+                                        <span class="badge {{ ticket.status_badge_class }}">
+                                            {{ ticket.status }}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted text-nowrap" style="white-space: nowrap;">{{ ticket.created_at|date:"Y-m-d" }}</td>
+                                    <td class="text-nowrap">
+                                        <a href="{% url 'ticket_detail' ticket.id %}" class="btn btn-sm btn-outline-primary border-0 text-navy" style="color: #0A3D91; font-weight: 600;">
+                                            <i class="fa-solid fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="fa-regular fa-folder-open fa-3x mb-3 text-secondary d-block" style="opacity: 0.5;"></i>No support tickets found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if tickets.has_other_pages %}
+                <div class="card-footer bg-white border-top py-3">
+                    <nav aria-label="Support tickets pagination">
+                        <ul class="pagination justify-content-center mb-0 pagination-sm">
+                            {% if tickets.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ tickets.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}" style="border-radius: 8px 0 0 8px;">Previous</a>
+                            </li>
+                            {% endif %}
+                            <li class="page-item disabled">
+                                <span class="page-link text-dark fw-bold">Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}</span>
+                            </li>
+                            {% if tickets.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ tickets.next_page_number }}&search={{ search_query }}&status={{ status_filter }}" style="border-radius: 0 8px 8px 0;">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterForm = document.getElementById('filterForm');
+    const searchInput = filterForm ? filterForm.querySelector('input[name="search"]') : null;
+    const ticketsListContainer = document.getElementById('tickets-list-container');
+    let debounceTimer = null;
+
+    if (!filterForm || !ticketsListContainer) return;
+
+    // Function to perform AJAX search
+    function performSearch() {
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams();
+        
+        // Populate search and status params
+        for (const [key, val] of formData.entries()) {
+            if (val.trim() !== '') {
+                params.append(key, val.trim());
+            }
+        }
+
+        const url = `${filterForm.getAttribute('action') || window.location.pathname}?${params.toString()}`;
+        
+        // Show a subtle loading indicator
+        ticketsListContainer.style.opacity = '0.5';
+        ticketsListContainer.style.transition = 'opacity 0.15s ease';
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(htmlText => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+            const newContent = doc.getElementById('tickets-list-container');
+            
+            if (newContent) {
+                ticketsListContainer.innerHTML = newContent.innerHTML;
+            }
+            ticketsListContainer.style.opacity = '1';
+            
+            // Update browser URL without refreshing the page
+            window.history.pushState({ path: url }, '', url);
+            
+            // Re-bind pagination clicks and clear filter events
+            bindPaginationLinks();
+        })
+        .catch(err => {
+            console.error('Search failed:', err);
+            ticketsListContainer.style.opacity = '1';
+        });
+    }
+
+    // Intercept programmatic form.submit() calls (e.g. from status filter clicking in base.html)
+    filterForm.submit = function() {
+        performSearch();
+    };
+
+    // Intercept form submissions (e.g. if the user clicks a button or triggers submit via other means)
+    filterForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearTimeout(debounceTimer);
+        performSearch();
+    });
+
+    // Real-time search: debounce input event on the search box
+    if (searchInput) {
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                performSearch();
+            }
+        });
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(performSearch, 300); // 300ms debounce
+        });
+    }
+
+    // Intercept "Clear Filters" link click dynamically
+    filterForm.addEventListener('click', function(e) {
+        const clearBtn = e.target.closest('a');
+        if (clearBtn && clearBtn.textContent.includes('Clear Filters')) {
+            e.preventDefault();
+            // Reset input values
+            if (searchInput) searchInput.value = '';
+            const statusInput = filterForm.querySelector('input[name="status"]');
+            if (statusInput) statusInput.value = '';
+            const dropdownToggleSpan = filterForm.querySelector('.custom-dropdown-toggle span');
+            if (dropdownToggleSpan) {
+                dropdownToggleSpan.innerHTML = '<i class="fa-solid fa-bars-staggered me-2 text-muted"></i>All Statuses';
+            }
+            
+            // Remove active state from dropdown items
+            filterForm.querySelectorAll('.custom-filter-dropdown .dropdown-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const allStatusesItem = filterForm.querySelector('.custom-filter-dropdown .dropdown-item[data-value=""]');
+            if (allStatusesItem) {
+                allStatusesItem.classList.add('active');
+            }
+
+            performSearch();
+        }
+    });
+
+    // Intercept pagination clicks to load via AJAX
+    function bindPaginationLinks() {
+        const paginationLinks = ticketsListContainer.querySelectorAll('.pagination a.page-link');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href && href !== '#') {
+                    e.preventDefault();
+                    
+                    ticketsListContainer.style.opacity = '0.5';
+                    
+                    fetch(href, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(htmlText => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        const newContent = doc.getElementById('tickets-list-container');
+                        
+                        if (newContent) {
+                            ticketsListContainer.innerHTML = newContent.innerHTML;
+                        }
+                        ticketsListContainer.style.opacity = '1';
+                        
+                        window.history.pushState({ path: href }, '', href);
+                        bindPaginationLinks();
+                        
+                        // Scroll smoothly to the top of the ticket list container
+                        ticketsListContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    })
+                    .catch(err => {
+                        console.error('Pagination load failed:', err);
+                        ticketsListContainer.style.opacity = '1';
+                    });
+                }
+            });
+        });
+    }
+
+    // Initial binding of pagination links
+    bindPaginationLinks();
+});
+</script>
+{% endblock %}

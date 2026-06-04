@@ -1,0 +1,12 @@
+{% extends 'helpdesk/base.html' %}
+
+{% block title %}Internal Server Error - IT Helpdesk{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h1 class="display-1 text-danger">500</h1>
+    <h2>Internal Server Error</h2>
+    <p class="lead">We are experiencing technical difficulties. Please try again later.</p>
+    <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">Return to Dashboard</a>
+</div>
+{% endblock %}

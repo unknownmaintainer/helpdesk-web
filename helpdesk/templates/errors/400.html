@@ -1,0 +1,12 @@
+{% extends 'helpdesk/base.html' %}
+
+{% block title %}Bad Request - IT Helpdesk{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h1 class="display-1 text-danger">400</h1>
+    <h2>Bad Request</h2>
+    <p class="lead">The server could not understand the request due to invalid syntax.</p>
+    <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">Return to Dashboard</a>
+</div>
+{% endblock %}

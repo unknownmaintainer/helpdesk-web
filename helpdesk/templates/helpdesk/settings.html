@@ -1,0 +1,723 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block title %}Settings — IT Helpdesk & Incident Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Icon Badge for Sections ── */
+    .icon-badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background-color: #f1f5f9;
+        color: #0A3D91;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background-color 0.2s, color 0.2s;
+    }
+    body.dark-mode .icon-badge {
+        background-color: #334155;
+        color: #f59e0b;
+    }
+
+    /* ── Segmented Theme Toggle ── */
+    .segmented-control {
+        display: inline-flex;
+        background-color: #e2e8f0;
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+    }
+    body.dark-mode .segmented-control {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    .theme-segment-btn {
+        border: none;
+        background: transparent;
+        padding: 6px 18px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    body.dark-mode .theme-segment-btn {
+        color: #94a3b8;
+    }
+    .theme-segment-btn:hover {
+        color: #1e293b;
+    }
+    body.dark-mode .theme-segment-btn:hover {
+        color: #cbd5e1;
+    }
+    .theme-segment-btn.active {
+        background-color: #ffffff;
+        color: #0A3D91;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+    body.dark-mode .theme-segment-btn.active {
+        background-color: #334155;
+        color: #f59e0b;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ── Custom Settings Action Outline Button ── */
+    .btn-settings-outline {
+        border: 1.5px solid #cbd5e1;
+        background-color: transparent;
+        color: #475569;
+        padding: 0.55rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    .btn-settings-outline:hover {
+        background-color: #f1f5f9;
+        color: #0A3D91;
+        border-color: #94a3b8;
+    }
+    body.dark-mode .btn-settings-outline {
+        border-color: #334155;
+        color: #cbd5e1;
+    }
+    body.dark-mode .btn-settings-outline:hover {
+        background-color: #334155;
+        color: #f59e0b;
+        border-color: #475569;
+    }
+
+    /* ── Guidelines Collapse & Checklist ── */
+    .guidelines-collapse {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .checklist-item {
+        font-size: 0.76rem;
+        transition: color 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .checklist-item.valid {
+        color: #10b981 !important;
+    }
+    .checklist-item.invalid {
+        color: #ef4444;
+    }
+
+    .form-control:focus {
+        border-color: #0A3D91;
+        box-shadow: 0 0 0 0.2rem rgba(10, 61, 145, 0.15);
+    }
+    body.dark-mode .form-control:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.15);
+    }
+
+    /* ── Custom Dark Mode Modals ── */
+    body.dark-mode .modal-content {
+        background-color: #1e293b;
+        color: #cbd5e1;
+        border: 1px solid #334155 !important;
+    }
+    body.dark-mode .modal-header,
+    body.dark-mode .modal-footer {
+        border-color: #334155;
+    }
+    body.dark-mode .modal-title {
+        color: #f59e0b !important;
+    }
+    body.dark-mode .btn-close {
+        filter: invert(1) grayscale(1) brightness(2);
+    }
+    body.dark-mode .modal-body p.text-muted {
+        color: #94a3b8 !important;
+    }
+
+    /* ── JS Toast Styles ── */
+    .js-toast {
+        background: #10b981;
+        color: white;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        margin-bottom: 10px;
+        min-width: 220px;
+    }
+    .js-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .js-toast.bg-danger {
+        background: #ef4444;
+    }
+    body.dark-mode .js-toast {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ── Section Header Text Color in Dark Mode ── */
+    body.dark-mode .text-section-header {
+        color: #f59e0b !important;
+    }
+
+    /* ── API Endpoints Badges Dark Mode ── */
+    body.dark-mode .badge.bg-success-subtle {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        color: #10b981 !important;
+    }
+    body.dark-mode .badge.bg-primary-subtle {
+        background-color: rgba(10, 61, 145, 0.25) !important;
+        color: #60a5fa !important;
+    }
+    body.dark-mode .badge.bg-info-subtle {
+        background-color: rgba(6, 182, 212, 0.15) !important;
+        color: #06b6d4 !important;
+    }
+
+    /* ── Code snippet styles ── */
+    .code-snippet-pre {
+        background-color: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        color: #334155;
+    }
+    body.dark-mode .code-snippet-pre {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+    }
+    body.dark-mode code {
+        color: #cbd5e1 !important;
+    }
+
+    /* ── API Token input ── */
+    .api-token-input {
+        background-color: #f8fafc;
+        border: 1.5px solid #cbd5e1;
+        color: #334155;
+    }
+    body.dark-mode .api-token-input {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* ── Custom copy token button ── */
+    .btn-copy-token {
+        border: 1.5px solid #cbd5e1;
+        color: #64748b;
+        background-color: #f8fafc;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        transition: all 0.2s ease;
+    }
+    .btn-copy-token:hover {
+        background-color: #f1f5f9;
+        color: #0A3D91;
+        border-color: #94a3b8;
+    }
+    body.dark-mode .btn-copy-token {
+        border-color: #334155 !important;
+        color: #94a3b8 !important;
+        background-color: #0f172a !important;
+    }
+    body.dark-mode .btn-copy-token:hover {
+        background-color: #1e293b !important;
+        color: #f59e0b !important;
+        border-color: #475569 !important;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="py-2 d-flex flex-column gap-3">
+
+    <!-- JS Toast Container (Centered Top) -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-3" id="jsToastContainer" style="z-index: 1090;">
+        <!-- Toasts will be appended here dynamically -->
+    </div>
+
+    <!-- Unified Settings Row -->
+    <div class="row g-4">
+        <div class="col-12">
+            
+            <!-- Combined Settings Card -->
+            <div class="card shadow-sm border-0" style="border-radius: 12px;">
+                
+                <!-- Section 1: Appearance Theme Mode -->
+                <div class="p-4 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-badge">
+                                <i class="fa-solid fa-palette fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-navy mb-1" style="color: #0A3D91; font-size: 1.1rem;">Appearance</h5>
+                                <p class="text-muted small mb-0">Select your preferred user interface theme mode.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Segmented Control for Light/Dark -->
+                        <div class="segmented-control" role="group" aria-label="Theme Selection">
+                            <button type="button" class="theme-segment-btn" data-theme="light">
+                                <i class="fa-regular fa-sun me-2"></i>Light
+                            </button>
+                            <button type="button" class="theme-segment-btn" data-theme="dark">
+                                <i class="fa-regular fa-moon me-2"></i>Dark
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Security Password Details -->
+                <div class="p-4 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-badge">
+                                <i class="fa-solid fa-shield-halved fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-navy mb-1" style="color: #0A3D91; font-size: 1.1rem;">Security</h5>
+                                <p class="text-muted small mb-2">Manage your account security and authentication settings.</p>
+                                <div class="d-flex align-items-center gap-4 mt-2 flex-wrap" style="font-size: 0.85rem;">
+                                    <div>
+                                        <span class="text-secondary fw-semibold">Password:</span>
+                                        <span class="ms-1 text-dark" style="letter-spacing: 1.5px;">••••••••••••</span>
+                                    </div>
+                                    <div class="text-secondary d-flex align-items-center gap-2">
+                                        <span class="rounded-circle bg-success" style="width: 6px; height: 6px; display: inline-block;"></span>
+                                        <span>Last changed: May 15, 2026</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-settings-outline" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                <i class="fa-solid fa-key me-2"></i>Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Notifications Preference -->
+                <div class="p-4">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="icon-badge">
+                            <i class="fa-solid fa-bell fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-navy mb-1" style="color: #0A3D91; font-size: 1.1rem;">Notifications</h5>
+                            <p class="text-muted small mb-0">Select the alerts and updates you wish to receive.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex flex-column gap-4">
+                        <!-- Switch 1: Ticket Updates -->
+                        <div class="form-check form-switch d-flex align-items-center justify-content-between p-0">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="text-secondary mt-1" style="width: 24px; text-align: center; flex-shrink: 0;">
+                                    <i class="fa-solid fa-ticket fa-lg"></i>
+                                </div>
+                                <div>
+                                    <label class="form-check-label fw-semibold text-dark cursor-pointer mb-0" for="notifyTickets">Ticket Updates</label>
+                                    <span class="d-block text-muted fw-normal mt-1" style="font-size: 0.8rem;">Get notified when tickets are updated or assigned.</span>
+                                </div>
+                            </div>
+                            <input class="form-check-input ms-3 flex-shrink-0" type="checkbox" role="switch" id="notifyTickets" {% if request.user.notify_tickets %}checked{% endif %} style="width: 2.2em; height: 1.2em; cursor: pointer;">
+                        </div>
+                        
+                        <!-- Switch 2: Security Alerts -->
+                        <div class="form-check form-switch d-flex align-items-center justify-content-between p-0 border-top pt-4">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="text-secondary mt-1" style="width: 24px; text-align: center; flex-shrink: 0;">
+                                    <i class="fa-solid fa-shield-halved fa-lg"></i>
+                                </div>
+                                <div>
+                                    <label class="form-check-label fw-semibold text-dark cursor-pointer mb-0" for="notifySecurity">Security Alerts</label>
+                                    <span class="d-block text-muted fw-normal mt-1" style="font-size: 0.8rem;">Receive notifications for critical security events and logins.</span>
+                                </div>
+                            </div>
+                            <input class="form-check-input ms-3 flex-shrink-0" type="checkbox" role="switch" id="notifySecurity" {% if request.user.notify_security %}checked{% endif %} style="width: 2.2em; height: 1.2em; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+            
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true" style="backdrop-filter: blur(4px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 14px;">
+            <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-navy" id="changePasswordModalLabel" style="color: #0A3D91;"><i class="fa-solid fa-lock me-2"></i>Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="password-form" method="POST" action="{% url 'settings' %}" class="mb-0">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="change_password">
+                <div class="modal-body px-4 py-3">
+                    <p class="text-muted small mb-4">Please enter your current password followed by your new password.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary text-uppercase" style="font-size:0.7rem;">Current Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-key" style="font-size:0.85rem;"></i></span>
+                            <input type="password" name="old_password" class="form-control border-start-0 border-end-0" placeholder="Enter current password" required>
+                            <button type="button" class="btn btn-outline-secondary border-start-0 toggle-password-visibility" style="border-color:#cbd5e1; border-top-right-radius:8px; border-bottom-right-radius:8px;">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary text-uppercase" style="font-size:0.7rem;">New Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-lock" style="font-size:0.85rem;"></i></span>
+                            <input type="password" name="new_password1" id="new_password_input" class="form-control border-start-0 border-end-0" placeholder="Enter new password" required>
+                            <button type="button" class="btn btn-outline-secondary border-start-0 toggle-password-visibility" style="border-color:#cbd5e1; border-top-right-radius:8px; border-bottom-right-radius:8px;">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Real-time strength display (Segmented Progress Bars) -->
+                        <div id="strength-container" class="guidelines-collapse mt-2">
+                            <div class="d-flex gap-2 mt-2" style="height: 6px;">
+                                <div id="strength-seg-1" class="flex-grow-1 rounded-pill" style="background-color: #e2e8f0; transition: background-color 0.2s;"></div>
+                                <div id="strength-seg-2" class="flex-grow-1 rounded-pill" style="background-color: #e2e8f0; transition: background-color 0.2s;"></div>
+                                <div id="strength-seg-3" class="flex-grow-1 rounded-pill" style="background-color: #e2e8f0; transition: background-color 0.2s;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small class="text-muted" style="font-size: 0.7rem;">Password Strength: <span id="strength-label" class="fw-bold text-danger">Too short</span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary text-uppercase" style="font-size:0.7rem;">Confirm New Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-lock" style="font-size:0.85rem;"></i></span>
+                            <input type="password" name="new_password2" id="new_password_input_confirm" class="form-control border-start-0 border-end-0" placeholder="Confirm new password" required>
+                            <button type="button" class="btn btn-outline-secondary border-start-0 toggle-password-visibility" style="border-color:#cbd5e1; border-top-right-radius:8px; border-bottom-right-radius:8px;">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                        <div id="pw-match-error" class="text-danger small mt-2 d-none">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i> Passwords do not match.
+                        </div>
+                    </div>
+
+                    <!-- Guidelines Checklist -->
+                    <div id="guidelines-container" class="guidelines-collapse bg-light rounded border p-3 mt-3" style="border-radius: 8px;">
+                        <span class="d-block fw-bold text-secondary mb-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">PASSWORD GUIDELINES</span>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="checklist-item invalid" id="rule-length"><i class="fa-solid fa-circle-xmark"></i> 8+ characters required</div>
+                            <div class="checklist-item invalid" id="rule-upper"><i class="fa-solid fa-circle-xmark"></i> At least 1 uppercase letter</div>
+                            <div class="checklist-item invalid" id="rule-number"><i class="fa-solid fa-circle-xmark"></i> At least 1 number</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 px-4 pb-4 pt-2 d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600; font-size: 0.85rem;">Cancel</button>
+                    <button type="submit" id="btnUpdatePassword" class="btn-primary-custom px-4 mb-0" style="border-radius: 8px; font-size: 0.85rem;" disabled>
+                        <i class="fa-solid fa-lock-open me-1"></i> Update Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // ── 1. Toast Notification System ──
+        window.showToast = function (message, type = 'success') {
+            const container = document.getElementById('jsToastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'js-toast';
+            if (type === 'danger') {
+                toast.classList.add('bg-danger');
+            }
+
+            toast.innerHTML = `
+                <i class="fa-solid ${type === 'danger' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i>
+                <span class="flex-grow-1">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            
+            // Trigger reflow to animate
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            // Auto-hide and destroy
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 2000);
+        };
+
+        // ── 2. Toggle Password Visibility Eye-Buttons ──
+        const toggleButtons = document.querySelectorAll('.toggle-password-visibility');
+        toggleButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const input = this.closest('.input-group').querySelector('input');
+                const icon = this.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-regular', 'fa-eye');
+                    icon.classList.add('fa-solid', 'fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-solid', 'fa-eye-slash');
+                    icon.classList.add('fa-regular', 'fa-eye');
+                }
+            });
+        });
+
+        // ── 3. Password Strength Check, Match Validator & Focus Observers ──
+        const pwInput = document.getElementById('new_password_input');
+        const pwConfirm = document.getElementById('new_password_input_confirm');
+        const pwMatchError = document.getElementById('pw-match-error');
+        const btnSubmitPass = document.getElementById('btnUpdatePassword');
+
+        const label = document.getElementById('strength-label');
+        const seg1 = document.getElementById('strength-seg-1');
+        const seg2 = document.getElementById('strength-seg-2');
+        const seg3 = document.getElementById('strength-seg-3');
+
+        const ruleLen = document.getElementById('rule-length');
+        const ruleUpper = document.getElementById('rule-upper');
+        const ruleNum = document.getElementById('rule-number');
+
+        const guidelinesContainer = document.getElementById('guidelines-container');
+        const strengthContainer = document.getElementById('strength-container');
+
+        if (pwInput) {
+            // Animate guidelines and strength bar open on focus
+            pwInput.addEventListener('focus', function () {
+                guidelinesContainer.style.maxHeight = '200px';
+                guidelinesContainer.style.opacity = '1';
+                strengthContainer.style.maxHeight = '100px';
+                strengthContainer.style.opacity = '1';
+            });
+
+            // Collapse back if empty on blur
+            pwInput.addEventListener('blur', function () {
+                if (pwInput.value.length === 0) {
+                    guidelinesContainer.style.maxHeight = '0';
+                    guidelinesContainer.style.opacity = '0';
+                    strengthContainer.style.maxHeight = '0';
+                    strengthContainer.style.opacity = '0';
+                }
+            });
+        }
+
+        function checkPasswordStrength() {
+            const val = pwInput.value;
+            let score = 0;
+            
+            const hasLen = val.length >= 8;
+            const hasUpper = /[A-Z]/.test(val);
+            const hasNum = /[0-9]/.test(val);
+
+            // Update guidelines UI list
+            updateRuleUI(ruleLen, hasLen);
+            updateRuleUI(ruleUpper, hasUpper);
+            updateRuleUI(ruleNum, hasNum);
+
+            // Reset segmented colors
+            seg1.style.backgroundColor = '';
+            seg2.style.backgroundColor = '';
+            seg3.style.backgroundColor = '';
+
+            if (val.length === 0) {
+                label.textContent = 'Too short';
+                label.className = 'fw-bold text-danger';
+                btnSubmitPass.disabled = true;
+                return;
+            }
+
+            if (hasLen) score += 1;
+            if (hasUpper) score += 1;
+            if (hasNum) score += 1;
+
+            if (score === 1) {
+                seg1.style.setProperty('background-color', '#ef4444', 'important');
+                label.textContent = 'Weak';
+                label.className = 'fw-bold text-danger';
+            } else if (score === 2) {
+                seg1.style.setProperty('background-color', '#f59e0b', 'important');
+                seg2.style.setProperty('background-color', '#f59e0b', 'important');
+                label.textContent = 'Medium';
+                label.className = 'fw-bold text-warning';
+            } else if (score === 3) {
+                seg1.style.setProperty('background-color', '#10b981', 'important');
+                seg2.style.setProperty('background-color', '#10b981', 'important');
+                seg3.style.setProperty('background-color', '#10b981', 'important');
+                label.textContent = 'Strong';
+                label.className = 'fw-bold text-success';
+            }
+
+            validatePasswordMatch();
+        }
+
+        function updateRuleUI(el, isValid) {
+            if (el) {
+                if (isValid) {
+                    el.classList.remove('invalid');
+                    el.classList.add('valid');
+                    el.querySelector('i').className = 'fa-solid fa-circle-check';
+                } else {
+                    el.classList.remove('valid');
+                    el.classList.add('invalid');
+                    el.querySelector('i').className = 'fa-solid fa-circle-xmark';
+                }
+            }
+        }
+
+        function validatePasswordMatch() {
+            const val1 = pwInput.value;
+            const val2 = pwConfirm.value;
+
+            const isStrengthValid = val1.length >= 8 && /[A-Z]/.test(val1) && /[0-9]/.test(val1);
+
+            if (val2.length > 0 && val1 !== val2) {
+                pwMatchError.classList.remove('d-none');
+                btnSubmitPass.disabled = true;
+            } else {
+                pwMatchError.classList.add('d-none');
+                btnSubmitPass.disabled = !(isStrengthValid && val1 === val2);
+            }
+        }
+
+        if (pwInput) pwInput.addEventListener('input', checkPasswordStrength);
+        if (pwConfirm) pwConfirm.addEventListener('input', validatePasswordMatch);
+
+        // ── 4. Theme Selector Segmented Control (Light/Dark) ──
+        const activePref = localStorage.getItem('theme') || 'light';
+        const themeBtns = document.querySelectorAll('.theme-segment-btn');
+        let initialSetupDone = false;
+        
+        themeBtns.forEach(btn => {
+            if (btn.getAttribute('data-theme') === activePref) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+            
+            btn.addEventListener('click', function() {
+                if (this.classList.contains('active')) return;
+                
+                themeBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const selectedTheme = this.getAttribute('data-theme');
+                applySelectedTheme(selectedTheme);
+            });
+        });
+
+        // Mark initial setup as done so we don't toast the user on initial load
+        initialSetupDone = true;
+
+        function applySelectedTheme(pref) {
+            localStorage.setItem('theme', pref);
+            localStorage.setItem('theme-pref', pref);
+            
+            if (pref === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            
+            if (initialSetupDone) {
+                showToast('Theme updated ✓', 'success');
+            }
+        }
+
+        // ── 5. Notification Switch Handlers ──
+        const notifyTicketsCheckbox = document.getElementById('notifyTickets');
+        const notifySecurityCheckbox = document.getElementById('notifySecurity');
+
+        if (notifyTicketsCheckbox && notifySecurityCheckbox) {
+            function updateNotificationPreferences() {
+                const formData = new FormData();
+                formData.append('action', 'update_notifications');
+                formData.append('notify_tickets', notifyTicketsCheckbox.checked);
+                formData.append('notify_security', notifySecurityCheckbox.checked);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+                fetch('{% url "settings" %}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showToast('Notification preferences updated ✓', 'success');
+                    } else {
+                        showToast('Failed to update preferences ✗', 'danger');
+                    }
+                })
+                .catch(err => {
+                    showToast('Failed to update preferences ✗', 'danger');
+                });
+            }
+
+            notifyTicketsCheckbox.addEventListener('change', function() {
+                localStorage.setItem('notify-tickets', this.checked);
+                updateNotificationPreferences();
+            });
+
+            notifySecurityCheckbox.addEventListener('change', function() {
+                localStorage.setItem('notify-security', this.checked);
+                updateNotificationPreferences();
+            });
+        }
+
+
+    });
+</script>
+{% endblock %}

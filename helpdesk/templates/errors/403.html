@@ -1,0 +1,12 @@
+{% extends 'helpdesk/base.html' %}
+
+{% block title %}Forbidden - IT Helpdesk{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h1 class="display-1 text-danger">403</h1>
+    <h2>Access Denied</h2>
+    <p class="lead">You do not have permission to access this resource.</p>
+    <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">Return to Dashboard</a>
+</div>
+{% endblock %}

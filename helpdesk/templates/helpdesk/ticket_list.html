@@ -1,0 +1,125 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block title %}My Assigned Tickets | HelpDeskPro{% endblock %}
+{% block page_title %}NIST Incident Response & Assigned Tickets{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex gap-2">
+        <a href="{% url 'submit_ticket' %}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-plus me-1"></i> Submit Ticket
+        </a>
+    </div>
+    
+    <!-- Filter Form -->
+    <form method="GET" action="{% url 'ticket_list' %}" class="d-flex gap-2 align-items-center flex-wrap">
+        <!-- NIST Stage Filter -->
+        <select name="nist_stage" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width: 160px;">
+            <option value="">-- All NIST Stages --</option>
+            <option value="preparation" {% if nist_stage_filter == 'preparation' %}selected{% endif %}>Preparation</option>
+            <option value="detection" {% if nist_stage_filter == 'detection' %}selected{% endif %}>Detection</option>
+            <option value="containment" {% if nist_stage_filter == 'containment' %}selected{% endif %}>Containment</option>
+            <option value="recovery" {% if nist_stage_filter == 'recovery' %}selected{% endif %}>Recovery</option>
+            <option value="closed" {% if nist_stage_filter == 'closed' %}selected{% endif %}>Closed</option>
+        </select>
+
+        <!-- Resolution Filter -->
+        <select name="is_resolved" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width: 160px;">
+            <option value="">-- All Statuses --</option>
+            <option value="true" {% if is_resolved_filter == 'true' %}selected{% endif %}>Resolved</option>
+            <option value="false" {% if is_resolved_filter == 'false' %}selected{% endif %}>Active (Unresolved)</option>
+        </select>
+
+        {% if nist_stage_filter or is_resolved_filter %}
+        <a href="{% url 'ticket_list' %}" class="btn btn-sm btn-outline-secondary" title="Clear Filters">
+            <i class="fa-solid fa-xmark"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-list-check me-2"></i>My Assigned Incidents & Tasks</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-simple mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-nowrap" style="width: 1%; min-width: 80px;">ID</th>
+                        <th>Title</th>
+                        <th class="text-nowrap" style="width: 1%; min-width: 120px;">Type</th>
+                        <th class="text-nowrap" style="width: 1%; min-width: 130px;">NIST Stage</th>
+                        <th class="text-nowrap" style="width: 1%; min-width: 100px;">Priority</th>
+                        <th class="text-nowrap" style="width: 1%; min-width: 100px;">Status</th>
+                        <th class="text-end text-nowrap" style="width: 1%; min-width: 200px;">Update NIST Stage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td class="text-nowrap"><strong>#{{ ticket.id }}</strong></td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ ticket.title }}</div>
+                            <div class="text-muted small text-truncate" style="max-width: 300px;">{{ ticket.description }}</div>
+                        </td>
+                        <td class="text-nowrap">
+                            <span class="badge {% if ticket.ticket_type == 'Security Incident' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %}">
+                                {{ ticket.ticket_type }}
+                            </span>
+                        </td>
+                        <td class="text-nowrap">
+                            <span class="badge 
+                                {% if ticket.nist_stage == 'preparation' %}bg-info-subtle text-info-emphasis
+                                {% elif ticket.nist_stage == 'detection' %}bg-warning-subtle text-warning-emphasis
+                                {% elif ticket.nist_stage == 'containment' %}bg-danger-subtle text-danger-emphasis
+                                {% elif ticket.nist_stage == 'recovery' %}bg-success-subtle text-success-emphasis
+                                {% else %}bg-secondary-subtle text-secondary-emphasis{% endif %}">
+                                {{ ticket.get_nist_stage_display }}
+                            </span>
+                        </td>
+                        <td class="text-nowrap">
+                            <span class="badge 
+                                {% if ticket.priority == 'Critical' %}bg-danger text-white
+                                {% elif ticket.priority == 'High' %}b-high
+                                {% elif ticket.priority == 'Medium' %}b-medium
+                                {% else %}b-low{% endif %}">
+                                {{ ticket.priority }}
+                            </span>
+                        </td>
+                        <td class="text-nowrap">
+                            {% if ticket.is_resolved %}
+                            <span class="badge b-resolved"><i class="fa-solid fa-circle-check me-1"></i>Resolved</span>
+                            {% else %}
+                            <span class="badge b-open"><i class="fa-solid fa-circle-dot me-1"></i>Active</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <form method="POST" action="{% url 'update_ticket_stage' ticket.id %}" class="d-inline-block">
+                                {% csrf_token %}
+                                <select name="nist_stage" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                    <option value="preparation" {% if ticket.nist_stage == 'preparation' %}selected{% endif %}>Preparation</option>
+                                    <option value="detection" {% if ticket.nist_stage == 'detection' %}selected{% endif %}>Detection</option>
+                                    <option value="containment" {% if ticket.nist_stage == 'containment' %}selected{% endif %}>Containment</option>
+                                    <option value="recovery" {% if ticket.nist_stage == 'recovery' %}selected{% endif %}>Recovery</option>
+                                    <option value="closed" {% if ticket.nist_stage == 'closed' %}selected{% endif %}>Closed</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-circle-info fa-2x mb-3 text-secondary"></i>
+                            <p class="mb-0">No assigned tickets found matching the filter criteria.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

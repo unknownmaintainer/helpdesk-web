@@ -1,0 +1,356 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block title %}My Profile — IT Helpdesk & Incident Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Profile Avatar Container & Camera Button ── */
+    .my-profile-avatar-container {
+        position: relative;
+        width: 130px;
+        height: 130px;
+    }
+    .avatar-wrapper {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        border: 4px solid #ffffff;
+        background-color: #f8fafc;
+        transition: transform 0.22s ease;
+        cursor: pointer;
+    }
+    body.dark-mode .avatar-wrapper {
+        border-color: #1e293b;
+        background-color: #0f172a;
+    }
+    .avatar-wrapper:hover {
+        transform: scale(1.04);
+    }
+    .camera-overlay-btn {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background-color: #ffffff;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.15);
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        z-index: 10;
+        padding: 0;
+    }
+    .camera-overlay-btn:hover {
+        transform: scale(1.08);
+        background-color: #f1f5f9;
+        color: #1e293b;
+    }
+    body.dark-mode .camera-overlay-btn {
+        background-color: #1e293b;
+        border-color: #334155;
+        color: #cbd5e1;
+    }
+    body.dark-mode .camera-overlay-btn:hover {
+        background-color: #334155;
+        color: #f8fafc;
+    }
+
+    /* ── Profile Page Layout ── */
+    .profile-card-main {
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    .profile-summary {
+        min-height: 100%;
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .profile-info-panel {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 32px;
+        min-height: 100%;
+    }
+    .profile-summary .badge {
+        min-width: 82px;
+        font-size: 0.72rem;
+    }
+    .profile-summary-title {
+        font-size: 1.5rem;
+    }
+    .profile-summary-subtitle {
+        font-size: 0.82rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .profile-actions .btn {
+        min-height: 48px;
+    }
+    .profile-info-panel .form-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+    }
+    .profile-info-panel .profile-meta-label {
+        font-size: 0.68rem;
+        letter-spacing: 0.08em;
+    }
+    .profile-info-panel .profile-meta-value {
+        font-size: 0.9rem;
+    }
+    @media (min-width: 992px) {
+        .profile-divider {
+            border-right: 1px solid #e2e8f0;
+        }
+        body.dark-mode .profile-divider {
+            border-right-color: #334155;
+        }
+    }
+
+    /* ── Dark Mode Text Visibility & Badge Overrides ── */
+    body.dark-mode .text-dark {
+        color: #f8fafc !important;
+    }
+    body.dark-mode .text-secondary {
+        color: #cbd5e1 !important;
+    }
+    body.dark-mode .text-muted {
+        color: #94a3b8 !important;
+    }
+    body.dark-mode .form-label {
+        color: #cbd5e1 !important;
+    }
+    body.dark-mode .profile-summary-subtitle {
+        color: #94a3b8 !important;
+    }
+    body.dark-mode .badge.bg-white {
+        background-color: #334155 !important;
+        color: #cbd5e1 !important;
+        border-color: #475569 !important;
+    }
+    body.dark-mode .badge.bg-secondary-subtle {
+        background-color: rgba(148, 163, 184, 0.2) !important;
+        color: #cbd5e1 !important;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="py-4">
+
+    <div class="row g-4 mb-4">
+        <!-- Left Column: Avatar & Summary -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100" style="border-radius: 20px;">
+                <div class="card-body d-flex flex-column justify-content-between p-4 bg-light" style="border-radius: 20px;">
+                    <div>
+                        <div class="text-center mb-4">
+                            <div class="my-profile-avatar-container mx-auto mb-3">
+                                <div class="avatar-wrapper" onclick="document.getElementById('avatar-input').click();" title="Change profile picture">
+                                    {% if request.user.profile_picture %}
+                                        <img id="avatar-preview" src="{{ request.user.profile_picture.url }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <div id="avatar-initials-view" class="w-100 h-100 d-flex align-items-center justify-content-center text-white" style="font-size: 2.8rem; font-weight: 800; background: linear-gradient(135deg, #0A3D91 0%, #1e5bb8 100%);">
+                                            {{ request.user.full_name|default:request.user.username|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <button type="button" class="camera-overlay-btn" onclick="document.getElementById('avatar-input').click();" title="Change profile picture">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                            </div>
+
+                            <form id="avatar-form" method="POST" action="{% url 'profile' %}" enctype="multipart/form-data" class="d-none">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_avatar">
+                                <input type="file" id="avatar-input" name="profile_picture" accept="image/*" onchange="submitAvatarForm();">
+                            </form>
+
+                            <h4 class="fw-bold mb-1 profile-summary-title">{{ request.user.full_name|default:request.user.username }}</h4>
+                            <p class="text-muted mb-3 profile-summary-subtitle" title="{{ request.user.email }}">{{ request.user.email }}</p>
+
+                        </div>
+
+                        <div class="profile-actions d-grid gap-2">
+                            <button type="button" class="btn btn-outline-primary fw-semibold" onclick="enableProfileEdit();">
+                                <i class="fa-solid fa-pen-to-square me-2"></i> Edit profile
+                            </button>
+                            {% if request.user.profile_picture %}
+                                <form method="POST" action="{% url 'profile' %}" class="mb-0">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="remove_avatar">
+                                    <button type="submit" class="btn btn-outline-danger fw-semibold w-100">
+                                        <i class="fa-solid fa-trash-can me-2"></i> Remove photo
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-top text-center">
+                        <small class="text-muted">Last Login: {{ request.user.last_login|date:"M d, Y H:i"|default:"First login session" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Details Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100" style="border-radius: 20px;">
+                <div class="card-body p-4 d-flex flex-column h-100">
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-navy mb-1"><i class="fa-solid fa-circle-user me-2"></i>Personal Information</h5>
+                        <p class="text-muted mb-0">Update your profile details and save changes.</p>
+                    </div>
+
+                    <form id="profile-info-form" method="POST" action="{% url 'profile' %}" class="d-flex flex-column flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_profile">
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label fw-semibold text-secondary text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em;">Full Name</label>
+                                <input type="text" id="full_name" name="full_name" class="form-control bg-light border-0 py-2 px-3" value="{{ request.user.full_name }}" readonly required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label fw-semibold text-secondary text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em;">Work Email</label>
+                                <input type="email" id="email" name="email" class="form-control bg-light border-0 py-2 px-3" value="{{ request.user.email }}" readonly required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4 pt-4 border-top">
+                            <div class="col-md-4">
+                                <span class="text-secondary text-uppercase d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.05em;">Role Type</span>
+                                <span class="fw-semibold text-dark text-capitalize d-block" style="font-size: 0.95rem;">{{ request.user.get_role_display }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="text-secondary text-uppercase d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.05em;">Department</span>
+                                <span class="fw-semibold text-dark d-block" style="font-size: 0.95rem;">{{ request.user.department }}</span>
+                                <input type="hidden" name="department" value="{{ request.user.department }}">
+                            </div>
+                            <div class="col-md-4">
+                                <span class="text-secondary text-uppercase d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.05em;">Date Joined</span>
+                                <span class="fw-semibold text-dark d-block" style="font-size: 0.95rem;">{{ request.user.date_joined|date:"Y-m-d" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto pt-4 border-top text-center">
+                            <button type="submit" id="btnSaveProfile" class="btn btn-primary px-4 py-2 rounded-3 shadow-sm fw-semibold" disabled>
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0" style="padding: 24px; border-radius: 12px;">
+                <h5 class="fw-bold text-navy mb-4" style="color: #0A3D91;"><i class="fa-solid fa-chart-line me-2"></i>Recent Activity</h5>
+                <div class="d-flex flex-column gap-3">
+                    {% for act in page_obj %}
+                        <div class="d-flex flex-column flex-sm-row gap-2 gap-sm-3 align-items-sm-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                            <div class="d-flex gap-3 align-items-center flex-grow-1">
+                                <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; flex-shrink: 0;">
+                                    <i class="fa-solid {{ act.icon }}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <p class="mb-0 text-dark fw-semibold" style="line-height: 1.4; font-size: 0.9rem;">{{ act.desc }}</p>
+                                </div>
+                            </div>
+                            <div class="text-start text-sm-end ps-5 ps-sm-0">
+                                <small class="text-muted text-uppercase" style="font-size: 0.7rem; font-weight: 600;">{{ act.date|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fa-regular fa-folder-open fa-3x mb-3 text-secondary" style="opacity: 0.4;"></i>
+                            <p class="mb-0 fw-semibold">No recent ticket activities found.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Activity pagination" class="mt-4">
+                        <ul class="pagination justify-content-center mb-0 pagination-sm">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" style="border-radius: 8px 0 0 8px;">Previous</a>
+                                </li>
+                            {% endif %}
+                            <li class="page-item disabled">
+                                <span class="page-link text-dark fw-bold">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" style="border-radius: 0 8px 8px 0;">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Enables the profile fields for editing
+    function enableProfileEdit() {
+        const fullNameInput = document.getElementById('full_name');
+        const emailInput = document.getElementById('email');
+        const saveBtn = document.getElementById('btnSaveProfile');
+        
+        fullNameInput.removeAttribute('readonly');
+        emailInput.removeAttribute('readonly');
+        saveBtn.removeAttribute('disabled');
+        
+        // Toggle input style to highlight editability
+        fullNameInput.classList.remove('bg-light', 'border-0');
+        fullNameInput.classList.add('border');
+        emailInput.classList.remove('bg-light', 'border-0');
+        emailInput.classList.add('border');
+        
+        fullNameInput.focus();
+        fullNameInput.select();
+    }
+
+    // Submits the hidden file input automatically when a new photo is selected
+    function submitAvatarForm() {
+        document.getElementById('avatar-form').submit();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const profileForm = document.getElementById('profile-info-form');
+        if (!profileForm) return;
+
+        profileForm.addEventListener('submit', function () {
+            const saveBtn = document.getElementById('btnSaveProfile');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
+            }
+        });
+    });
+</script>
+{% endblock %}
