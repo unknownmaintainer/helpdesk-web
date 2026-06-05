@@ -26,6 +26,8 @@ class TicketAdmin(admin.ModelAdmin):
         for ticket in queryset:
             if not ticket.is_resolved:
                 ticket.is_resolved = True
+                ticket.status = 'Resolved'
+                ticket.nist_stage = 'recovery'
                 tickets_to_update.append(ticket)
                 
                 # Write to database audit trail
@@ -49,7 +51,7 @@ class TicketAdmin(admin.ModelAdmin):
                 updated_count += 1
                 
         if tickets_to_update:
-            Ticket.objects.bulk_update(tickets_to_update, ['is_resolved'])
+            Ticket.objects.bulk_update(tickets_to_update, ['is_resolved', 'status', 'nist_stage'])
             TicketLog.objects.bulk_create(logs_to_create)
                 
         self.message_user(request, f"Successfully marked {updated_count} tickets as resolved.")
